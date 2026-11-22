@@ -118,10 +118,14 @@
   .Damage_Card .Stat_Value { font-size: 104px; color: var(--warn); text-shadow: 0 0 14px rgba(255,201,79,.5); }
   .Damage_Card.Danger .Stat_Value { color: var(--bad); text-shadow: 0 0 16px rgba(255,77,94,.7); }
   .Size_Card .Stat_Value { color: var(--ok); text-shadow: 0 0 14px rgba(93,255,176,.5); }
+  .Stat_Card:not(.Size_Card) .Stat_Sub { display: none; }   /* 레벨·대미지의 회색 안내 글씨 숨김 */
+  .Stat_Card { position: relative; }
+  .Stat_Value { flex: 1; display: flex; align-items: center; }   /* 세 칸 숫자 높이 맞춤 */
+  .Size_Card .Stat_Sub { position: absolute; left: 0; right: 0; bottom: 55px; text-align: center; font-size: 18px; }
   .Stat_Sub { font-size: 12px; color: var(--sub); min-height: 15px; }
   .Btn_Pair { display: flex; gap: 6px; width: 100%; }
   .Btn_Pair button {
-    flex: 1; height: 50px; font-size: 26px; font-weight: 900;
+    flex: 1; height: 110px; font-size: 48px; font-weight: 900;   /* 폰에서도 누르기 쉽게 크게 */
     background: linear-gradient(180deg, #1d5fd0, #0b2f86);
     border: 1px solid var(--neon2);
   }
@@ -142,7 +146,7 @@
   .Cost_Fill.Over { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
   .Cost_Controls { display: flex; gap: 6px; flex: 1; min-height: 0; }
   .Cost_Controls button {
-    flex: 1; min-height: 48px; font-size: 36px; font-weight: 900;
+    flex: 1; min-height: 48px; font-size: 48px; font-weight: 900;
     background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
   }
   .Cost_Controls button:active { filter: brightness(1.5); }
