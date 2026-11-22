@@ -33,8 +33,10 @@
   }
   button { font-family: inherit; color: inherit; touch-action: manipulation; cursor: pointer; background: none; border: none; }
 
+  /* 화면 크기 맞춤: 작은 화면(폰)은 전체를 비율대로 축소해서 잘리지 않게 함 */
   #App {
-    height: 100vh; height: 100dvh; padding: 14px 22px 18px;
+    position: fixed; top: 0; left: 0; transform-origin: 0 0;
+    width: 100vw; height: 100vh; height: 100dvh; padding: 14px 22px 18px;
     display: grid; grid-template-rows: auto 1fr; gap: 12px;
   }
 
@@ -99,8 +101,8 @@
     padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 0;
   }
   .Stat_Label { font-size: 14px; letter-spacing: 2px; font-weight: 800; color: var(--sub); }
-  .Stat_Value { font-size: clamp(44px, 7vw, 92px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(79,227,255,.5); }
-  .Damage_Card .Stat_Value { font-size: clamp(56px, 9vw, 116px); color: var(--warn); text-shadow: 0 0 14px rgba(255,201,79,.5); }
+  .Stat_Value { font-size: 82px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(79,227,255,.5); }
+  .Damage_Card .Stat_Value { font-size: 104px; color: var(--warn); text-shadow: 0 0 14px rgba(255,201,79,.5); }
   .Damage_Card.Danger .Stat_Value { color: var(--bad); text-shadow: 0 0 16px rgba(255,77,94,.7); }
   .Size_Card .Stat_Value { color: var(--ok); text-shadow: 0 0 14px rgba(93,255,176,.5); }
   .Stat_Sub { font-size: 12px; color: var(--sub); min-height: 15px; }
@@ -178,6 +180,7 @@
   /* ---------- 모달 ---------- */
   .Modal_Back { position: fixed; inset: 0; background: rgba(0, 6, 25, .7); display: none; align-items: center; justify-content: center; z-index: 20; }
   .Modal_Back.Show { display: flex; }
+  .Modal_Back .Modal { transform: scale(var(--app-scale, 1)); max-height: calc(85vh / var(--app-scale, 1)); flex-shrink: 0; }
   .Modal {
     background: linear-gradient(180deg, #0c3488, #041a4a); border: 2px solid var(--neon);
     box-shadow: 0 0 30px rgba(79,227,255,.4);
@@ -663,10 +666,24 @@ function Align_Awake_Button() {
   const btn = document.getElementById("Btn_Awake_Center");
   const col = document.getElementById("Center_Col");
   const b = badge.getBoundingClientRect(), c = col.getBoundingClientRect();
-  const top = (b.top + b.height / 2) - c.top - btn.offsetHeight / 2;
+  const top = ((b.top + b.height / 2) - c.top) / appScale - btn.offsetHeight / 2;
   btn.style.marginTop = Math.max(0, top) + "px";
 }
-window.addEventListener("resize", Align_Awake_Button);
+// 기준 화면(아이패드 가로 1180×760 이상)보다 작으면 비율대로 축소
+const BASE_W = 1180, BASE_H = 760;
+let appScale = 1;
+function Fit_Screen() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  appScale = Math.min(1, vw / BASE_W, vh / BASE_H);
+  const app = document.getElementById("App");
+  app.style.width = (vw / appScale) + "px";
+  app.style.height = (vh / appScale) + "px";
+  app.style.transform = appScale < 1 ? `scale(${appScale})` : "";
+  document.documentElement.style.setProperty("--app-scale", appScale);   // 팝업창도 같은 비율
+  Align_Awake_Button();
+}
+window.addEventListener("resize", Fit_Screen);
+window.addEventListener("orientationchange", () => setTimeout(Fit_Screen, 300));
 
 // ---------- 시작 ----------
 Build_Panel("p1");
@@ -678,7 +695,7 @@ try {
 } catch (e) {}
 state.p1.sizeMod = 0; state.p2.sizeMod = 0;   // 보정 버튼이 없으니 항상 0
 Render_All();
-Align_Awake_Button();
+Fit_Screen();
 </script>
 </body>
 </html>
