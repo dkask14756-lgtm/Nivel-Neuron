@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="니벨아레나 뉴런">
+<title>니벨아레나 뉴런</title>
+<style>
+  :root {
+    --bg1: #041a4a;
+    --bg2: #0a3a9e;
+    --neon: #4fe3ff;
+    --neon2: #1e8bff;
+    --text: #eaf6ff;
+    --sub: #8fb6e8;
+    --p1: #4fe3ff;
+    --p2: #ff7a8a;
+    --ok: #5dffb0;
+    --warn: #ffc94f;
+    --bad: #ff4d5e;
+    --glass: rgba(6, 30, 90, .45);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; color: var(--text); overflow: hidden;
+    font-family: -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    background:
+      linear-gradient(180deg, rgba(2, 12, 40, .45), rgba(2, 12, 40, .55)),
+      url("bg.jpg") center / cover no-repeat,
+      #041a4a;
+  }
+  button { font-family: inherit; color: inherit; touch-action: manipulation; cursor: pointer; background: none; border: none; }
+
+  #App {
+    height: 100vh; height: 100dvh; padding: 14px 22px 18px;
+    display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  }
+
+  /* ---------- 상단 ---------- */
+  #Top_Bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .Hex_Btn {
+    width: 58px; height: 58px; display: grid; place-items: center;
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+    background: linear-gradient(180deg, #1b5fd6, #0a2c7a);
+    font-size: 22px; font-weight: 900; color: var(--neon);
+    box-shadow: inset 0 0 0 2px var(--neon);
+  }
+  .Hex_Btn:active { filter: brightness(1.4); }
+  #Timer_Box { text-align: center; }
+  #Timer_Box .Cap { font-size: 13px; letter-spacing: 4px; font-weight: 800; color: var(--neon); }
+  #Timer {
+    display: flex; align-items: center; gap: 16px; margin-top: 4px;
+    padding: 8px 26px; border: 2px solid var(--neon); border-radius: 6px;
+    background: rgba(2, 14, 50, .7); box-shadow: 0 0 18px rgba(79,227,255,.35);
+    clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
+  }
+  #Timer_Play { font-size: 22px; color: var(--neon); width: 34px; }
+  #Timer_Text { font-size: 40px; font-weight: 800; letter-spacing: 3px; font-variant-numeric: tabular-nums; text-shadow: 0 0 10px rgba(79,227,255,.6); }
+
+  /* ---------- 가운데 ---------- */
+  #Main { display: grid; grid-template-columns: 1fr 170px 1fr; grid-template-rows: 1fr auto; gap: 14px; min-height: 0; }
+  #Panel_p1 { grid-column: 1; grid-row: 1 / 3; }
+  #Panel_p2 { grid-column: 3; grid-row: 1 / 3; }
+  #Center_Col { grid-column: 2; grid-row: 1; }
+  #Bottom_Bar { grid-column: 2; grid-row: 2; }
+
+  .Player_Panel {
+    --accent: var(--p1);
+    position: relative; min-height: 0;
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--glass);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 2px solid rgba(79,227,255,.35);
+    box-shadow: inset 0 0 30px rgba(30,139,255,.25);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .Player_Panel.p1 { clip-path: polygon(0 0, 88% 0, 100% 14%, 100% 100%, 0 100%); }
+  .Player_Panel.p2 { --accent: var(--p2); clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 14%); }
+  .Player_Panel.Is_Turn { border-color: var(--accent); box-shadow: inset 0 0 40px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 20px var(--accent); }
+
+  .Panel_Head { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--text); padding-bottom: 6px; }
+  .p2 .Panel_Head { flex-direction: row-reverse; }
+  .Player_Name { font-size: 30px; font-weight: 900; letter-spacing: 1px; font-style: italic; }
+  .Turn_Mark { color: var(--accent); font-size: 22px; font-weight: 900; text-shadow: 0 0 10px var(--accent); }
+  .Player_Panel:not(.Is_Turn) .Turn_Mark { visibility: hidden; }
+  .Awake_Badge {
+    margin-left: auto; margin-right: 30px;   /* 패널 사선 모서리에 안 잘리게 안쪽으로 */
+    font-size: 26px; line-height: 1.2; font-weight: 900; padding: 2px 14px;
+    border: 2px solid var(--sub); color: var(--sub); border-radius: 6px;
+  }
+  .p2 .Awake_Badge { margin-left: 30px; margin-right: auto; }
+  .Awake_Badge.On { background: linear-gradient(90deg, #ffe27a, #ff9f43); color: #2a1a00; border-color: transparent; }
+
+  .Stat_Row { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 10px; flex: 2.4 1 0; min-height: 0; }
+  .Stat_Card {
+    background: rgba(2, 14, 50, .55); border: 1px solid rgba(79,227,255,.25);
+    padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 0;
+  }
+  .Stat_Label { font-size: 14px; letter-spacing: 2px; font-weight: 800; color: var(--sub); }
+  .Stat_Value { font-size: clamp(44px, 7vw, 92px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(79,227,255,.5); }
+  .Damage_Card .Stat_Value { font-size: clamp(56px, 9vw, 116px); color: var(--warn); text-shadow: 0 0 14px rgba(255,201,79,.5); }
+  .Damage_Card.Danger .Stat_Value { color: var(--bad); text-shadow: 0 0 16px rgba(255,77,94,.7); }
+  .Size_Card .Stat_Value { color: var(--ok); text-shadow: 0 0 14px rgba(93,255,176,.5); }
+  .Stat_Sub { font-size: 12px; color: var(--sub); min-height: 15px; }
+  .Btn_Pair { display: flex; gap: 6px; width: 100%; }
+  .Btn_Pair button {
+    flex: 1; height: 50px; font-size: 26px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86);
+    border: 1px solid var(--neon2);
+  }
+  .Btn_Pair button.Mod { font-size: 14px; white-space: nowrap; letter-spacing: -0.5px; }
+  .Btn_Pair button:active { filter: brightness(1.5); }
+
+  .Cost_Box { flex: 1 1 0; min-height: 0; background: rgba(2, 14, 50, .55); border: 1px solid rgba(79,227,255,.25); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .Cost_Top { display: flex; align-items: baseline; gap: 10px; }
+  .Cost_Text { font-size: 32px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .Cost_Left { margin-left: auto; font-size: 16px; color: var(--sub); font-weight: 800; }
+  .Cost_Left b { font-size: 32px; font-weight: 900; color: var(--text); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .Cost_Left.Over b { color: var(--bad); }
+  .Cost_Left.Zero b { color: #ff9f43; }   /* 여유 0 = 주황 */
+  .Cost_Left.Over { color: var(--bad); }
+  .Cost_Bar { height: 16px; background: #020a24; border: 1px solid rgba(79,227,255,.3); overflow: hidden; }
+  .Cost_Fill { height: 100%; width: 0; background: var(--ok); box-shadow: 0 0 10px var(--ok); transition: width .15s; }
+  .Cost_Fill.Full { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .Cost_Fill.Over { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+  .Cost_Controls { display: flex; gap: 6px; flex: 1; min-height: 0; }
+  .Cost_Controls button {
+    flex: 1; min-height: 48px; font-size: 36px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
+  }
+  .Cost_Controls button:active { filter: brightness(1.5); }
+
+  .Result_Overlay {
+    position: absolute; inset: 0; display: none; z-index: 5;
+    align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+    background: rgba(2, 8, 30, .85);
+  }
+  .Result_Overlay.Show { display: flex; }
+  .Result_Overlay .Big { font-size: 72px; font-weight: 900; letter-spacing: 6px; font-style: italic; }
+  .Result_Overlay.Lose .Big { color: var(--bad); text-shadow: 0 0 20px var(--bad); }
+  .Result_Overlay.Win .Big { color: #ffe27a; text-shadow: 0 0 20px #ffb347; }
+  .Result_Overlay .Sub { font-size: 14px; color: var(--sub); }
+
+  /* 가운데 컨트롤 */
+  #Center_Col { display: flex; flex-direction: column; align-items: center; }
+  #Btn_Awake_Center { flex: 0 0 auto; margin-top: 0; }   /* 위치는 JS에서 각성 배지 높이에 맞춤 */
+  #Center_Btns { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+  .Tri_Btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; }
+  .Tri_Shape {
+    width: 96px; height: 84px; display: grid; place-items: center; font-size: 28px; font-weight: 900;
+    background: linear-gradient(180deg, #2a8bff, #0b3aa8);
+    filter: drop-shadow(0 0 8px rgba(79,227,255,.6));
+  }
+  .Tri_Down, .Tri_Up {
+    width: 92px; height: 80px; font-size: 32px; color: var(--neon);
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+    background: linear-gradient(180deg, #1b5fd6, #0a2c7a);
+    box-shadow: inset 0 0 0 2px var(--neon);
+  }
+  .Tri_Btn:active .Tri_Shape { filter: brightness(1.5) drop-shadow(0 0 12px var(--neon)); }
+  #Btn_Awake_Center {
+    width: 150px; height: 48px; font-size: 17px; font-weight: 900; letter-spacing: 1px;
+    background: linear-gradient(180deg, #1d6fe8, #0a2f8a);
+    border: 2px solid var(--neon); box-shadow: 0 0 16px rgba(79,227,255,.5);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+  }
+  #Btn_Awake_Center:active { filter: brightness(1.4); }
+
+  /* ---------- 하단 ---------- */
+  #Bottom_Bar { display: flex; justify-content: center; align-items: center; }
+  .Util_Btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .Util_Btn .Hex_Btn { width: 66px; height: 66px; font-size: 26px; }
+  .Util_Btn.Top_Util { gap: 2px; font-size: 13px; }
+  .Util_Btn.Top_Util .Hex_Btn { width: 58px; height: 58px; font-size: 22px; }
+
+  /* ---------- 모달 ---------- */
+  .Modal_Back { position: fixed; inset: 0; background: rgba(0, 6, 25, .7); display: none; align-items: center; justify-content: center; z-index: 20; }
+  .Modal_Back.Show { display: flex; }
+  .Modal {
+    background: linear-gradient(180deg, #0c3488, #041a4a); border: 2px solid var(--neon);
+    box-shadow: 0 0 30px rgba(79,227,255,.4);
+    padding: 24px; width: min(560px, 90vw); max-height: 85vh; display: flex; flex-direction: column; gap: 14px;
+  }
+  .Modal h2 { margin: 0; font-size: 22px; letter-spacing: 2px; color: var(--neon); }
+  .Modal p { margin: 0; color: var(--sub); font-size: 15px; line-height: 1.5; }
+  .Modal_Row { display: flex; gap: 10px; }
+  .Modal_Row button {
+    flex: 1; height: 56px; font-size: 17px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
+  }
+  .Modal_Row .Pick_P2, .Modal_Row .Danger_Btn { background: linear-gradient(180deg, #c23a55, #5a1024); border-color: var(--p2); }
+  .Check_Row { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 700; padding: 6px 0; align-self: flex-start; }
+  .Check_Box { width: 28px; height: 28px; border: 3px solid var(--neon); background: transparent; }
+  .Check_Row.On .Check_Box { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+  .Awake_Set { display: grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: center; }
+  .Awake_Set span { font-weight: 800; }
+  .Stepper { display: flex; align-items: center; gap: 12px; }
+  .Stepper button { width: 64px; height: 52px; font-size: 26px; font-weight: 900; background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2); }
+  .Stepper button:active { filter: brightness(1.5); }
+  .Stepper b { min-width: 70px; text-align: center; font-size: 30px; font-weight: 900; color: #ffd56b; }
+  #Log_List { overflow-y: auto; max-height: 50vh; line-height: 1.8; padding-right: 6px; }
+  #Log_List div { border-bottom: 1px solid #000; padding: 4px 0; display: flex; align-items: baseline; }
+  #Log_List .T { color: var(--sub); font-size: 19px; flex: 0 0 76px; font-variant-numeric: tabular-nums; }
+  #Log_List .L { font-size: 20px; font-weight: 800; }
+  #Dice_Result { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #D20 { position: relative; width: 170px; height: 170px; }
+  #D20 svg { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(79,227,255,.6)); }
+  #D20_Num {
+    position: absolute; inset: 0; display: grid; place-items: center; padding-top: 14px;
+    font-size: 52px; font-weight: 900; color: #fff; text-shadow: 0 0 12px var(--neon);
+    font-variant-numeric: tabular-nums;
+  }
+  #D20.Rolling { animation: D20_Spin .35s linear infinite; }
+  #D20.Landed { animation: D20_Pop .45s ease-out; }
+  #D20.Crit #D20_Num { color: #ffe27a; text-shadow: 0 0 18px #ffb347; }
+  #D20.Fumble #D20_Num { color: var(--bad); text-shadow: 0 0 18px var(--bad); }
+  @keyframes D20_Spin {
+    0%   { transform: rotate(0deg)   translate(0, 0)    scale(.92); }
+    25%  { transform: rotate(90deg)  translate(6px, -8px) scale(1); }
+    50%  { transform: rotate(180deg) translate(0, -2px) scale(.94); }
+    75%  { transform: rotate(270deg) translate(-6px, -8px) scale(1); }
+    100% { transform: rotate(360deg) translate(0, 0)    scale(.92); }
+  }
+  @keyframes D20_Pop {
+    0%   { transform: scale(1.35); }
+    60%  { transform: scale(.94); }
+    100% { transform: scale(1); }
+  }
+  #Coin_Result { font-size: 30px; font-weight: 900; min-height: 38px; color: var(--neon); text-shadow: 0 0 12px var(--neon); }
+
+  /* ---------- 가로 전용 ---------- */
+  #Rotate_Notice {
+    position: fixed; inset: 0; z-index: 50; background: #041a4a;
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+    font-size: 22px; font-weight: 800; text-align: center;
+  }
+  #Rotate_Notice small { color: var(--sub); font-size: 15px; font-weight: 600; }
+  @media (orientation: portrait) { #Rotate_Notice { display: flex; } }
+</style>
+</head>
+<body>
+
+<div id="App">
+  <div id="Top_Bar">
+    <div><button class="Hex_Btn" id="Btn_Close" aria-label="닫기">✕</button></div>
+    <div id="Timer_Box">
+      <div class="Cap">DUEL TIME</div>
+      <div id="Timer"><button id="Timer_Play">▶</button><span id="Timer_Text">00:00:00</span></div>
+    </div>
+    <div style="justify-self:end"><button class="Util_Btn Top_Util" id="Btn_Log"><div class="Hex_Btn">☰</div>로그</button></div>
+  </div>
+
+  <div id="Main">
+    <section class="Player_Panel p1" id="Panel_p1"></section>
+
+    <div id="Center_Col">
+      <button id="Btn_Awake_Center">각성 레벨</button>
+      <div id="Center_Btns">
+        <button class="Tri_Btn" id="Btn_New"><div class="Tri_Shape Tri_Down">↻</div>초기화</button>
+        <button class="Tri_Btn" id="Btn_Undo"><div class="Tri_Shape Tri_Up">←</div>되돌리기</button>
+      </div>
+    </div>
+
+    <section class="Player_Panel p2" id="Panel_p2"></section>
+
+    <div id="Bottom_Bar">
+      <button class="Util_Btn" id="Btn_Dice"><div class="Hex_Btn">⚄</div>주사위 / 코인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 초기화 시 로그 초기화 여부 -->
+<div class="Modal_Back" id="Modal_Reset_Log">
+  <div class="Modal">
+    <h2>초기화</h2>
+    <p style="font-size:19px;color:var(--text);font-weight:700">듀얼 로그를 초기화 하시겠습니까?</p>
+    <button class="Check_Row" id="Btn_Timer_Check"><span class="Check_Box"></span>타이머 초기화</button>
+    <div class="Modal_Row">
+      <button id="Btn_Log_Yes">예</button>
+      <button class="Danger_Btn" id="Btn_Log_No">아니오</button>
+    </div>
+  </div>
+</div>
+
+<!-- 각성 설정 -->
+<div class="Modal_Back" id="Modal_Awake">
+  <div class="Modal">
+    <h2>각성 레벨</h2>
+    <p>리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.</p>
+    <div class="Awake_Set">
+      <span style="color:var(--p1)">PLAYER 01</span>
+      <div class="Stepper"><button data-awake="p1" data-d="-1">−</button><b id="Awake_Val_p1">5</b><button data-awake="p1" data-d="1">+</button></div>
+      <span style="color:var(--p2)">PLAYER 02</span>
+      <div class="Stepper"><button data-awake="p2" data-d="-1">−</button><b id="Awake_Val_p2">5</b><button data-awake="p2" data-d="1">+</button></div>
+    </div>
+    <div class="Modal_Row"><button data-close>닫기</button></div>
+  </div>
+</div>
+
+<!-- 로그 -->
+<div class="Modal_Back" id="Modal_Log">
+  <div class="Modal">
+    <h2>DUEL LOG</h2>
+    <div id="Log_List"></div>
+    <div class="Modal_Row"><button data-close>닫기</button></div>
+  </div>
+</div>
+
+<!-- 주사위/코인 -->
+<div class="Modal_Back" id="Modal_Dice">
+  <div class="Modal">
+    <h2>주사위 / 코인</h2>
+    <div id="Dice_Result">
+      <div id="D20">
+        <!-- 20면체 주사위를 정면에서 본 모양 -->
+        <svg viewBox="0 0 100 100">
+          <polygon points="50,3 91,26 91,74 50,97 9,74 9,26" fill="#0b2f86" stroke="#4fe3ff" stroke-width="2.5"/>
+          <polygon points="50,22 76,66 24,66" fill="#1d5fd0" stroke="#4fe3ff" stroke-width="1.8"/>
+          <g stroke="#4fe3ff" stroke-width="1.2" opacity=".7">
+            <line x1="50" y1="3"  x2="50" y2="22"/><line x1="9"  y1="26" x2="50" y2="22"/><line x1="91" y1="26" x2="50" y2="22"/>
+            <line x1="9"  y1="26" x2="24" y2="66"/><line x1="91" y1="26" x2="76" y2="66"/>
+            <line x1="9"  y1="74" x2="24" y2="66"/><line x1="91" y1="74" x2="76" y2="66"/>
+            <line x1="50" y1="97" x2="24" y2="66"/><line x1="50" y1="97" x2="76" y2="66"/>
+          </g>
+        </svg>
+        <div id="D20_Num">20</div>
+      </div>
+      <div id="Coin_Result"></div>
+    </div>
+    <div class="Modal_Row">
+      <button id="Btn_Roll">주사위 (1~20)</button>
+      <button id="Btn_Coin">코인 (앞/뒤)</button>
+    </div>
+    <div class="Modal_Row"><button data-close>닫기</button></div>
+  </div>
+</div>
+
+<div id="Rotate_Notice">
+  📱 가로 화면으로 돌려줘
+  <small>이 버전은 가로 전용이야</small>
+</div>
+
+<script>
+// ============================================================
+//  니벨아레나 뉴런
+//  룰 기준: 니벨아레나 종합 룰
+//   - 리더 레벨 1에서 시작, 매 턴 레벨업 페이즈에 +1, 최대 10
+//   - 사이즈 = 리더 레벨 + 대미지 존 카드 수 (+ 카드 효과 보정)
+//   - 필드(유닛 존 + 스킬 존) 코스트 합은 사이즈를 넘길 수 없음
+//   - 대미지 10 → 패배
+// ============================================================
+
+const MAX_LEVEL = 10;
+const LOSE_DAMAGE = 10;
+const SAVE_KEY = "Nivel_Counter_Landscape_Save";
+const NAMES = { p1: "PLAYER 01", p2: "PLAYER 02" };
+const SHORT = { p1: "P1", p2: "P2" };
+const LABEL = { level: "레벨", damage: "대미지", sizeMod: "사이즈 보정", fieldCost: "필드 코스트" };
+
+// ---------- 상태 ----------
+function Make_Player() {
+  return { level: 1, damage: 0, sizeMod: 0, fieldCost: 0, awakeLevel: 5 };
+}
+let state = { p1: Make_Player(), p2: Make_Player(), turnPlayer: null, turnCount: 0, log: [], timerMs: 0 };
+let history = [];
+
+// ---------- 계산 ----------
+function Get_Size(p) { return Math.max(0, p.level + p.damage + p.sizeMod); }
+function Get_Loser() {
+  if (state.p1.damage >= LOSE_DAMAGE) return "p1";
+  if (state.p2.damage >= LOSE_DAMAGE) return "p2";
+  return null;
+}
+function Other(id) { return id === "p1" ? "p2" : "p1"; }
+
+// ---------- 로그 ----------
+function Add_Log(text) {
+  const sec = Math.floor(state.timerMs / 1000);
+  const t = `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+  state.log.push({ t, text });   // 듀얼 타이머 기준 시각
+}
+
+// ---------- 되돌리기 ----------
+function Save_History() {
+  history.push(JSON.stringify(state));
+  if (history.length > 200) history.shift();
+}
+function Undo() {
+  if (history.length === 0) return;
+  const keepTimer = state.timerMs;
+  state = JSON.parse(history.pop());
+  state.timerMs = keepTimer;     // 타이머는 되돌리지 않음
+  Render_All();
+}
+
+// ---------- 동작 ----------
+function Change_Value(id, key, delta) {
+  const p = state[id];
+  let next = p[key] + delta;
+  if (key === "level") next = Math.min(MAX_LEVEL, Math.max(1, next));
+  if (key === "damage") next = Math.min(LOSE_DAMAGE, Math.max(0, next));
+  if (key === "fieldCost") next = Math.max(0, next);
+  if (next === p[key]) return;
+  Save_History();
+  p[key] = next;
+  Add_Log(`${SHORT[id]} ${LABEL[key]} ${delta > 0 ? "+" : "−"}${Math.abs(delta)} → ${next}`);
+  if (key === "level" && delta > 0 && next === p.awakeLevel) Add_Log(`${SHORT[id]} 리더 각성!`);
+  if (key === "damage" && next >= LOSE_DAMAGE) Add_Log(`${SHORT[id]} 대미지 10 — ${SHORT[Other(id)]} 승리`);
+  Render_All();
+}
+
+function Level_Up(id) {
+  const p = state[id];
+  if (p.level < MAX_LEVEL) p.level += 1;
+  Add_Log(`${SHORT[id]} 레벨업 페이즈 → Lv ${p.level}`);
+  if (p.level === p.awakeLevel) Add_Log(`${SHORT[id]} 리더 각성!`);
+}
+
+function Reset_Game(clearLog) {
+  // 초기화: 레벨 1, 대미지 0, 보정·필드 코스트 0. 선후공은 오프라인에서 수동으로.
+  Save_History();                       // 실수로 눌러도 되돌리기 가능
+  for (const id of ["p1", "p2"]) {
+    const awake = state[id].awakeLevel;
+    state[id] = Make_Player();
+    state[id].awakeLevel = awake;       // 각성 레벨 설정은 유지
+  }
+  state.turnPlayer = null;
+  state.turnCount = 0;
+  if (clearLog) state.log = [];    // "예": 듀얼 로그까지 비움
+  Add_Log("초기화");
+  Render_All();
+}
+
+// ---------- 타이머 ----------
+let timerRunning = false, timerStart = 0, timerBase = 0, timerLoop = null;
+function Timer_Toggle() { timerRunning ? Timer_Stop() : Timer_Start(); }
+function Timer_Start() {
+  timerRunning = true; timerBase = state.timerMs; timerStart = Date.now();
+  timerLoop = setInterval(() => { state.timerMs = timerBase + (Date.now() - timerStart); Render_Timer(); }, 250);
+  Render_Timer();
+}
+function Timer_Stop() {
+  timerRunning = false; clearInterval(timerLoop);
+  Render_Timer(); Save_State();
+}
+function Timer_Reset() { Timer_Stop(); state.timerMs = 0; Render_Timer(); Save_State(); }
+function Render_Timer() {
+  const s = Math.floor(state.timerMs / 1000);
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor(s / 60) % 60).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  document.getElementById("Timer_Text").textContent = `${hh}:${mm}:${ss}`;
+  document.getElementById("Timer_Play").textContent = timerRunning ? "❚❚" : "▶";
+}
+
+// ---------- 화면 ----------
+function Build_Panel(id) {
+  const el = document.getElementById("Panel_" + id);
+  el.innerHTML = `
+    <div class="Panel_Head">
+      <span class="Player_Name">${NAMES[id]}</span>
+      <span class="Awake_Badge" data-ref="awake">각성 Lv 5</span>
+    </div>
+    <div class="Stat_Row">
+      <div class="Stat_Card">
+        <div class="Stat_Label">LEVEL</div>
+        <div class="Stat_Value" data-ref="level">1</div>
+        <div class="Stat_Sub">최대 ${MAX_LEVEL}</div>
+        <div class="Btn_Pair"><button data-act="level" data-d="-1">−</button><button data-act="level" data-d="1">+</button></div>
+      </div>
+      <div class="Stat_Card Damage_Card" data-ref="damageCard">
+        <div class="Stat_Label">DAMAGE</div>
+        <div class="Stat_Value" data-ref="damage">0</div>
+        <div class="Stat_Sub" data-ref="damageSub">패배까지 10</div>
+        <div class="Btn_Pair"><button data-act="damage" data-d="-1">−</button><button data-act="damage" data-d="1">+</button></div>
+      </div>
+      <div class="Stat_Card Size_Card">
+        <div class="Stat_Label">SIZE</div>
+        <div class="Stat_Value" data-ref="size">1</div>
+        <div class="Stat_Sub" data-ref="sizeSub">레벨 + 대미지</div>
+        <div class="Btn_Pair" style="visibility:hidden"><button tabindex="-1">−</button></div>  <!-- 보정 버튼 삭제(오터치 방지), 칸 높이만 유지 -->
+      </div>
+    </div>
+    <div class="Cost_Box">
+      <div class="Cost_Top">
+        <span class="Stat_Label">FIELD COST</span>
+        <span class="Cost_Text" data-ref="costText">0 / 1</span>
+        <span class="Cost_Left" data-ref="costLeft">여유 1</span>
+      </div>
+      <div class="Cost_Bar"><div class="Cost_Fill" data-ref="costFill"></div></div>
+      <div class="Cost_Controls">
+        <button data-act="fieldCost" data-d="-1">−</button>
+        <button data-act="fieldCost" data-d="1">+</button>
+      </div>
+    </div>
+    <div class="Result_Overlay" data-ref="result">
+      <div class="Big" data-ref="resultBig"></div>
+      <div class="Sub">초기화로 다시 시작 / 되돌리기로 취소</div>
+    </div>
+  `;
+  el.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === "fieldReset") {
+      if (state[id].fieldCost !== 0) {
+        Save_History(); state[id].fieldCost = 0;
+        Add_Log(`${SHORT[id]} 필드 코스트 → 0`); Render_All();
+      }
+      return;
+    }
+    if (act) Change_Value(id, act, Number(btn.dataset.d));
+  });
+}
+
+function Ref(id, name) { return document.querySelector(`#Panel_${id} [data-ref="${name}"]`); }
+
+function Render_Panel(id) {
+  const p = state[id];
+  const size = Get_Size(p);
+
+  Ref(id, "level").textContent = p.level;
+  Ref(id, "damage").textContent = p.damage;
+  Ref(id, "damageSub").textContent = p.damage >= LOSE_DAMAGE ? "패배" : `패배까지 ${LOSE_DAMAGE - p.damage}`;
+  Ref(id, "damageCard").classList.toggle("Danger", p.damage >= 7);
+
+  Ref(id, "size").textContent = size;
+  Ref(id, "sizeSub").textContent = p.sizeMod === 0
+    ? `${p.level} + ${p.damage}`
+    : `${p.level} + ${p.damage} ${p.sizeMod > 0 ? "+" : "−"} ${Math.abs(p.sizeMod)}(보정)`;
+
+  const awake = Ref(id, "awake");
+  const isAwake = p.level >= p.awakeLevel;
+  awake.classList.toggle("On", isAwake);
+  awake.textContent = isAwake ? "★ 각성" : `각성 Lv ${p.awakeLevel}`;
+
+  const left = size - p.fieldCost;
+  Ref(id, "costText").textContent = `${p.fieldCost} / ${size}`;
+  const leftEl = Ref(id, "costLeft");
+  leftEl.innerHTML = left >= 0 ? `여유<b>${left}</b>` : `초과<b>${-left}</b>`;
+  leftEl.classList.toggle("Over", left < 0);
+  leftEl.classList.toggle("Zero", left === 0);
+  const fill = Ref(id, "costFill");
+  fill.style.width = size > 0 ? Math.min(100, p.fieldCost / size * 100) + "%" : (p.fieldCost > 0 ? "100%" : "0");
+  fill.classList.toggle("Full", left === 0 && p.fieldCost > 0);
+  fill.classList.toggle("Over", left < 0);
+
+  const loser = Get_Loser();
+  const result = Ref(id, "result");
+  result.classList.toggle("Show", !!loser);
+  result.classList.toggle("Lose", loser === id);
+  result.classList.toggle("Win", !!loser && loser !== id);
+  Ref(id, "resultBig").textContent = loser === id ? "LOSE" : "WIN";
+}
+
+function Render_Log() {
+  const list = document.getElementById("Log_List");
+  list.innerHTML = state.log.length
+    ? state.log.slice().reverse().map(l => `<div><span class="T">${l.t}</span><span class="L">${l.text}</span></div>`).join("")
+    : "<div><span class=\"L\">기록 없음</span></div>";
+}
+
+function Save_State() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function Render_All() {
+  Render_Panel("p1");
+  Render_Panel("p2");
+  document.getElementById("Awake_Val_p1").textContent = "Lv " + state.p1.awakeLevel;
+  document.getElementById("Awake_Val_p2").textContent = "Lv " + state.p2.awakeLevel;
+  Render_Timer();
+  Save_State();
+}
+
+// ---------- 모달 ----------
+function Show_Modal(id, show) { document.getElementById(id).classList.toggle("Show", show); }
+document.querySelectorAll("[data-close]").forEach(b =>
+  b.addEventListener("click", () => b.closest(".Modal_Back").classList.remove("Show")));
+
+
+// 각성 레벨 ± (1~10)
+function Change_Awake_Level(id, delta) {
+  const p = state[id];
+  const next = Math.min(MAX_LEVEL, Math.max(1, p.awakeLevel + delta));
+  if (next === p.awakeLevel) return;
+  p.awakeLevel = next;
+  Add_Log(`${SHORT[id]} 각성 레벨 → Lv ${next}`);
+  Render_All();
+}
+document.querySelectorAll("[data-awake]").forEach(btn =>
+  btn.addEventListener("click", () => Change_Awake_Level(btn.dataset.awake, Number(btn.dataset.d))));
+
+// 닫기(✕) 버튼: 지금은 비활성 — 스토어 출시 때 앱 종료 기능 연결 예정
+document.getElementById("Btn_Close").addEventListener("click", () => {});
+document.getElementById("Btn_New").addEventListener("click", () => Show_Modal("Modal_Reset_Log", true));
+// 타이머 초기화 체크(■ 초기화 / □ 유지) — 예·아니오 어느 쪽이든 적용
+let resetTimerChecked = false;
+const timerCheck = document.getElementById("Btn_Timer_Check");
+timerCheck.addEventListener("click", () => {
+  resetTimerChecked = !resetTimerChecked;
+  timerCheck.classList.toggle("On", resetTimerChecked);
+});
+function Confirm_Reset(clearLog) {
+  Show_Modal("Modal_Reset_Log", false);
+  if (resetTimerChecked) Timer_Reset();
+  Reset_Game(clearLog);
+  if (resetTimerChecked) state.log[state.log.length - 1].text = "초기화 (타이머 포함)";
+  Render_All();
+}
+document.getElementById("Btn_Log_Yes").addEventListener("click", () => Confirm_Reset(true));
+document.getElementById("Btn_Log_No").addEventListener("click", () => Confirm_Reset(false));
+document.getElementById("Btn_Awake_Center").addEventListener("click", () => Show_Modal("Modal_Awake", true));
+document.getElementById("Btn_Undo").addEventListener("click", Undo);
+document.getElementById("Btn_Log").addEventListener("click", () => { Render_Log(); Show_Modal("Modal_Log", true); });
+document.getElementById("Btn_Dice").addEventListener("click", () => Show_Modal("Modal_Dice", true));
+document.getElementById("Timer").addEventListener("click", Timer_Toggle);
+
+// 주사위(1~20): 숫자가 빠르게 바뀌며 굴러가다 점점 느려지고 멈춤
+let isRolling = false;
+function Roll_D20() {
+  if (isRolling) return;
+  isRolling = true;
+  const die = document.getElementById("D20");
+  const num = document.getElementById("D20_Num");
+  const result = 1 + Math.floor(Math.random() * 20);   // 결과는 먼저 정해둠
+  die.classList.remove("Landed", "Crit", "Fumble");
+  die.classList.add("Rolling");
+  document.getElementById("Coin_Result").textContent = "";
+
+  let delay = 32;                 // 숫자 바뀌는 간격(ms) — 점점 늘어남
+  const Tick = () => {
+    if (delay > 210) {            // 멈춤
+      num.textContent = result;
+      die.classList.remove("Rolling");
+      void die.offsetWidth;       // 애니메이션 재시작용
+      die.classList.add("Landed");
+      if (result === 20) die.classList.add("Crit");
+      if (result === 1) die.classList.add("Fumble");
+      Add_Log(`주사위(1~20) → ${result}`); Save_State();
+      isRolling = false;
+      return;
+    }
+    num.textContent = 1 + Math.floor(Math.random() * 20);
+    delay *= 1.26;               // 전체 연출 약 0.85초
+    setTimeout(Tick, delay);
+  };
+  Tick();
+}
+document.getElementById("Btn_Roll").addEventListener("click", Roll_D20);
+document.getElementById("Btn_Coin").addEventListener("click", () => {
+  const r = Math.random() < 0.5 ? "앞면" : "뒷면";
+  if (isRolling) return;
+  document.getElementById("Coin_Result").textContent = "코인: " + r;
+  Add_Log(`코인 → ${r}`); Save_State();
+});
+
+// 각성 레벨 버튼을 양쪽 "각성 Lv" 배지와 같은 높이에 맞춤
+function Align_Awake_Button() {
+  const badge = document.querySelector("#Panel_p1 [data-ref=awake]");
+  const btn = document.getElementById("Btn_Awake_Center");
+  const col = document.getElementById("Center_Col");
+  const b = badge.getBoundingClientRect(), c = col.getBoundingClientRect();
+  const top = (b.top + b.height / 2) - c.top - btn.offsetHeight / 2;
+  btn.style.marginTop = Math.max(0, top) + "px";
+}
+window.addEventListener("resize", Align_Awake_Button);
+
+// ---------- 시작 ----------
+Build_Panel("p1");
+Build_Panel("p2");
+let loaded = false;
+try {
+  const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+  if (saved && saved.p1 && saved.p2) { state = Object.assign({ log: [], timerMs: 0 }, saved); loaded = true; }
+} catch (e) {}
+state.p1.sizeMod = 0; state.p2.sizeMod = 0;   // 보정 버튼이 없으니 항상 0
+Render_All();
+Align_Awake_Button();
+</script>
+</body>
+</html>
