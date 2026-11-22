@@ -2,8 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="니벨아레나 뉴런">
 <title>니벨아레나 뉴런</title>
 <style>
@@ -22,21 +24,32 @@
     --glass: rgba(6, 30, 90, .45);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* 아이폰 홈 화면 앱에서 문서가 밀리지 않게 화면에 고정 */
   html, body {
-    margin: 0; height: 100%; color: var(--text); overflow: hidden;
+    margin: 0; position: fixed; inset: 0; width: 100%; height: 100%; color: var(--text); overflow: hidden; overscroll-behavior: none;
     font-family: -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
     user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    background: #041a4a;
+  }
+  #Bg {
+    position: fixed; inset: 0; z-index: -1;
     background:
       linear-gradient(180deg, rgba(2, 12, 40, .45), rgba(2, 12, 40, .55)),
-      url("bg.jpg") center / cover no-repeat,
-      #041a4a;
+      url("bg.jpg") center / cover no-repeat;
+  }
+  /* 노치·상태바를 피한 실제 사용 영역 */
+  #Stage {
+    position: fixed;
+    top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
+    left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
+    overflow: hidden;
   }
   button { font-family: inherit; color: inherit; touch-action: manipulation; cursor: pointer; background: none; border: none; }
 
   /* 화면 크기 맞춤: 작은 화면(폰)은 전체를 비율대로 축소해서 잘리지 않게 함 */
   #App {
-    position: fixed; top: 0; left: 0; transform-origin: 0 0;
-    width: 100vw; height: 100vh; height: 100dvh; padding: 14px 22px 18px;
+    position: absolute; top: 0; left: 0; transform-origin: 0 0;
+    width: 100%; height: 100%; padding: 14px 22px 18px;
     display: grid; grid-template-rows: auto 1fr; gap: 12px;
   }
 
@@ -245,6 +258,8 @@
 </head>
 <body>
 
+<div id="Bg"></div>
+<div id="Stage">
 <div id="App">
   <div id="Top_Bar">
     <div><button class="Hex_Btn" id="Btn_Close" aria-label="닫기">✕</button></div>
@@ -273,6 +288,7 @@
     </div>
   </div>
 </div>
+</div>  <!-- /Stage -->
 
 <!-- 초기화 시 로그 초기화 여부 -->
 <div class="Modal_Back" id="Modal_Reset_Log">
@@ -673,7 +689,10 @@ function Align_Awake_Button() {
 const BASE_W = 1180, BASE_H = 760;
 let appScale = 1;
 function Fit_Screen() {
-  const vw = window.innerWidth, vh = window.innerHeight;
+  window.scrollTo(0, 0);
+  const stage = document.getElementById("Stage");
+  const vw = stage.clientWidth, vh = stage.clientHeight;
+  if (!vw || !vh) return;
   appScale = Math.min(1, vw / BASE_W, vh / BASE_H);
   const app = document.getElementById("App");
   app.style.width = (vw / appScale) + "px";
@@ -683,7 +702,9 @@ function Fit_Screen() {
   Align_Awake_Button();
 }
 window.addEventListener("resize", Fit_Screen);
-window.addEventListener("orientationchange", () => setTimeout(Fit_Screen, 300));
+window.addEventListener("orientationchange", () => { setTimeout(Fit_Screen, 100); setTimeout(Fit_Screen, 500); });
+if (window.visualViewport) visualViewport.addEventListener("resize", Fit_Screen);
+window.addEventListener("pageshow", Fit_Screen);
 
 // ---------- 시작 ----------
 Build_Panel("p1");
