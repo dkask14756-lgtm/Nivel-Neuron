@@ -99,6 +99,54 @@
   #Update_Bar.Show { display: block; }
 
 
+  /* ================= 리미트 레귤레이션 ================= */
+  #LimitView {
+    position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column; gap: 10px;
+    padding: 10px 22px 12px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .84), rgba(2, 10, 36, .9)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #LimitView.Show { display: flex; }
+  .LV_Top { display: flex; align-items: center; gap: 18px; }
+  #LV_Home { gap: 4px; font-size: 16px; }
+  #LV_Home .Hex_Btn { width: 82px; height: 82px; }
+  #LV_Home .Hex_Btn svg { width: 36px; height: 36px; }
+  .LV_Title { font-size: 34px; font-weight: 900; font-style: italic; text-shadow: 0 0 14px rgba(79,227,255,.5); }
+  .LV_Date { margin-left: auto; padding: 10px 18px; font-size: 22px; font-weight: 900; border: 2px solid var(--neon); background: rgba(2,14,50,.75); }
+  .LV_Date small { color: var(--sub); font-size: 15px; margin-right: 8px; }
+  #LV_Body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 14px; padding-bottom: 10px; }
+  .LV_Sec { border: 1px solid rgba(79,227,255,.35); flex-shrink: 0; }
+  .LV_Hd { width: 100%; display: flex; align-items: center; gap: 14px; height: 58px; padding: 0 20px; color: var(--text);
+    background: linear-gradient(90deg, #020a24 35%, var(--c)); border: none; border-bottom: 1px solid rgba(79,227,255,.35); font-family: inherit; }
+  .LV_Hd .Ar { color: var(--neon); font-size: 22px; font-weight: 900; transition: transform .2s; }
+  .LV_Sec.Fold .LV_Hd .Ar { transform: rotate(180deg); }
+  .LV_Sec.Fold .LV_Rows, .LV_Sec.Fold .LV_P { display: none; }
+  .LV_Hd .T { font-size: 24px; font-weight: 900; } .LV_Hd .T b { color: #ffd54f; }
+  .LV_Hd .N { margin-left: auto; font-size: 24px; font-weight: 900; }
+  .LV_Rows { display: grid; grid-template-columns: 1fr 1fr; }
+  .LV_Row { display: flex; align-items: center; gap: 14px; height: 60px; padding: 0 18px; background: rgba(12,52,136,.55);
+    border-bottom: 1px solid rgba(79,227,255,.25); border-right: 1px solid rgba(79,227,255,.15); }
+  .LV_Sq { width: 30px; height: 38px; border-radius: 3px; border: 2px solid rgba(255,255,255,.35); flex-shrink: 0; }
+  .LV_Id { font-size: 14px; color: var(--sub); font-weight: 800; width: 84px; flex-shrink: 0; }
+  .LV_Nm { font-size: 21px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .LV_Chg { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; flex-shrink: 0; }
+  .LV_Chg .O { padding: 4px 9px; border-radius: 4px; background: rgba(255,255,255,.14); color: #cfe3ff; border: 1px solid rgba(255,255,255,.3); }
+  .LV_Chg .A { color: #ffd54f; font-size: 13px; }
+  .LV_Chg .W { padding: 4px 10px; border-radius: 4px; }
+  .LV_Chg .Red { background: #d6223a; } .LV_Chg .Ora { background: #f08a2a; color: #2a1200; }
+  .LV_P { display: flex; align-items: center; border-bottom: 1px solid rgba(79,227,255,.25); }
+  .LV_P .PA, .LV_P .PB { flex: 1; min-width: 0; } .LV_P .LV_Row { border-right: none; }
+  .LV_X { width: 56px; text-align: center; font-size: 26px; font-weight: 900; color: #ff6b81; flex-shrink: 0; }
+  .LV_X.G { color: #5be3a0; }
+  .LV_Why { width: 230px; font-size: 16px; font-weight: 800; color: #5be3a0; padding: 0 14px; flex-shrink: 0; }
+  .LV_Rel .LV_Row { opacity: .85; }
+  .LV_Note { font-size: 16px; color: var(--sub); padding: 2px 4px; flex-shrink: 0; }
+  .NC .Lm { position: absolute; bottom: 38px; left: 3px; font-size: 10px; font-weight: 900; padding: 1px 4px; border-radius: 3px; }
+  .NC .Lm.Ban { background: #d6223a; } .NC .Lm.L1 { background: #f08a2a; color: #2a1200; } .NC .Lm.L2 { background: #d9a62a; color: #2a1a00; }
+  .NC.Bad { box-shadow: 0 0 0 3px #ff2d4a inset, 0 0 10px #ff2d4a; }
+  #D_Status.Bad { background: #8a1020; border-color: #ff6b81; color: #fff; }
+
   /* ================= 덱 만들기 ================= */
   #DeckView {
     position: absolute; inset: 0; z-index: 12; display: none; flex-direction: column;
@@ -461,9 +509,18 @@
         <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22"/><path d="M17 17l30 30"/></svg></div>
         <div class="Home_Name">리미트 레귤레이션</div>
         <div class="Home_Desc">금지 · 제한 카드 목록</div>
-        <span class="Soon">준비 중</span>
       </button>
     </div>
+  </section>
+
+  <!-- ================= 리미트 레귤레이션 화면 ================= -->
+  <section id="LimitView">
+    <div class="LV_Top">
+      <button class="Util_Btn Top_Util" id="LV_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
+      <div class="LV_Title">리미트 레귤레이션</div>
+      <div class="LV_Date"><small>적용일</small><span id="LV_DateTxt"></span></div>
+    </div>
+    <div id="LV_Body"></div>
   </section>
 
   <!-- ================= 덱 만들기 화면 ================= -->
@@ -890,7 +947,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1818";
+const APP_VERSION = "20261123-1840";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -932,7 +989,6 @@ function Open_Awake(beforeDuel) {
   Show_Modal("Modal_Awake", true);
 }
 document.getElementById("Home_Deck").addEventListener("click", () => { Show_Home(false); Show_Deck(true); });
-document.getElementById("Home_Limit").addEventListener("click", () => Show_Toast("리미트 레귤레이션은 준비 중이야"));
 
 // ============================================================
 //  덱 만들기
@@ -2027,6 +2083,43 @@ const CARDS = CARD_DATA.trim().split("\n").map((line, i) => {
 });
 const CARD_BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 
+// ---------- 리미트 레귤레이션 (공식 「금지·제한 카드 - 2026년 9월 7일」) ----------
+const LIMIT_REG = {
+  date: "2026. 09. 11",
+  ban: ["ST09-007", "BT05-003", "BT05-019", "BT05-027", "BT05-033", "BT05-044", "BT05-050", "BT05-072", "SB02-023"],
+  lim1: ["BT03-041", "SB01-014", "BT05-015", "SB01-005", "BT05-008", "ST08-014", "ST08-016", "ST09-013", "BT05-024", "BT05-036", "BT05-057"],
+  lim2: ["SB01-004", "BT05-065", "SB01-002"],
+  pairs: [["ST08-014", ["BT05-024"]], ["BT04-042", ["BT04-072", "BT04-073", "BT04-076"]]],
+  // 이번에 바뀐 카드: 이전 상태
+  changed: { "ST09-007": "3장", "BT05-003": "3장", "BT05-019": "3장", "BT05-027": "3장", "BT05-033": "3장", "BT05-044": "페어", "BT05-050": "3장", "BT05-072": "페어", "SB02-023": "3장",
+             "ST08-014": "3장", "ST08-016": "페어", "ST09-013": "3장", "BT05-024": "3장", "BT05-036": "3장", "BT05-057": "페어" },
+  released: [["BT05-044", "BT05-072", "둘 다 금지로 이동"], ["ST08-016", "BT05-057", "둘 다 1장 제한으로 이동"]],
+};
+// 카드별 최대 장수 (금지 0, 제한 1·2, 나머지 3)
+function Max_Copies(id) {
+  if (LIMIT_REG.ban.includes(id)) return 0;
+  if (LIMIT_REG.lim1.includes(id)) return 1;
+  if (LIMIT_REG.lim2.includes(id)) return 2;
+  return 3;
+}
+// 이 카드와 같이 넣을 수 없는 카드 목록 (금지 페어)
+function Pair_Partners(id) {
+  const out = [];
+  LIMIT_REG.pairs.forEach(([a, bs]) => { if (a === id) out.push(...bs); else if (bs.includes(id)) out.push(a); });
+  return out;
+}
+// 덱 안에서 금제를 어긴 카드 id 모음
+// (금지 페어에는 리더 카드도 있어서 리더도 같이 확인)
+function Limit_Violations(cards, leader) {
+  const bad = new Set();
+  const has = (id) => cards[id] || id === leader;
+  Object.entries(cards).forEach(([id, n]) => {
+    if (n > Max_Copies(id)) bad.add(id);
+    Pair_Partners(id).forEach(p => { if (has(p)) { bad.add(id); bad.add(p); } });
+  });
+  return bad;
+}
+
 // ---------- 덱 상태 ----------
 function New_Deck() { return { id: null, name: "", leader: null, cards: {} }; }
 let deck = New_Deck();
@@ -2053,7 +2146,11 @@ function Can_Add(card) {
   const L = Leader();
   if (!L) return { ok: false, why: "리더를 먼저 골라줘" };
   if (!Color_Ok(card, L)) return { ok: false, why: "리더 서약에 맞지 않는 속성이야" };
-  if ((deck.cards[card.id] || 0) >= MAX_SAME) return { ok: false, why: "같은 카드는 3장까지야" };
+  const mx = Max_Copies(card.id);
+  if (mx === 0) return { ok: false, why: "금지 카드라서 덱에 넣을 수 없어" };
+  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `제한 카드라서 ${mx}장까지야` : "같은 카드는 3장까지야" };
+  const pp = Pair_Partners(card.id).find(p => deck.cards[p] || deck.leader === p);
+  if (pp) return { ok: false, why: `금지 페어: ${CARD_BY_ID[pp] ? CARD_BY_ID[pp].n : pp}와(과) 같이 넣을 수 없어` };
   if (Deck_Total() >= DECK_SIZE) return { ok: false, why: "덱이 40장 꽉 찼어" };
   if (card.tr && Deck_Trig() >= MAX_TRIG) return { ok: false, why: "트리거는 8장까지야" };
   return { ok: true };
@@ -2068,6 +2165,7 @@ function Color_Ok(card, L) {
 function Deck_Status() {
   const L = Leader(), total = Deck_Total(), trig = Deck_Trig();
   if (!L) return { ok: false, text: "리더 없음" };
+  if (Limit_Violations(deck.cards, deck.leader).size) return { ok: false, bad: true, text: "금제 위반" };
   if (total < DECK_SIZE) return { ok: false, text: `${DECK_SIZE - total}장 더 필요` };
   if (trig > MAX_TRIG) return { ok: false, text: "트리거 초과" };
   if (L.vt === "M" && !Object.keys(deck.cards).some(id => CARD_BY_ID[id].at === L.vc))
@@ -2104,10 +2202,11 @@ function Try_Set_Leader(L) {
     const keep = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
     Object.keys(deck.cards).forEach(id => { const a = CARD_BY_ID[id].at; if (a !== L.vc && a !== keep) bad.push(id); });
   }
+  Pair_Partners(L.id).forEach(p => { if (deck.cards[p] && !bad.includes(p)) bad.push(p); });   // 리더와 금지 페어인 카드
   const apply = () => { bad.forEach(id => delete deck.cards[id]); deck.leader = L.id; Deck_Changed(); Show_Toast(`리더: ${L.n}`); };
   if (bad.length === 0) { apply(); return; }
   const n = bad.reduce((a, id) => a + deck.cards[id], 0);
-  Ask("리더 변경", `${L.n}(으)로 바꾸면 서약에 맞지 않는 카드 ${n}장이 덱에서 빠져. 바꿀까?`, apply);
+  Ask("리더 변경", `${L.n}(으)로 바꾸면 서약 또는 금지 페어에 걸리는 카드 ${n}장이 덱에서 빠져. 바꿀까?`, apply);
 }
 
 function Deck_Changed() { Save_Current(); Render_Deck(); if (Picker_Open()) Render_Picker(); }
@@ -2129,11 +2228,14 @@ function Tile(card, opt = {}) {
   const cls = ["NC", "a-" + card.at];
   if (opt.off) cls.push("Off");
   if (opt.lead) cls.push("Lead");
+  if (opt.bad) cls.push("Bad");
   const cost = card.ty === "리" ? (card.aw ? "Lv" + card.aw : "L") : (card.c ?? "");
   const pw = card.p != null ? `<span class="Pw">${card.p}</span>` : (card.ty === "리" ? `<span class="Pw">리더</span>` : "");
   const tr = card.tr ? `<span class="Tr">트리거</span>` : "";
   const ct = opt.count ? `<span class="Ct">${opt.count}</span>` : "";
-  return `<button class="${cls.join(" ")}" data-id="${card.id}"><span class="Co">${cost}</span>${pw}${tr}${ct}<div class="Nm">${Esc(card.n)}</div></button>`;
+  const mx = card.ty === "리" ? 3 : Max_Copies(card.id);
+  const lm = mx === 0 ? `<span class="Lm Ban">금지</span>` : mx < 3 ? `<span class="Lm L${mx}">${mx}장</span>` : "";
+  return `<button class="${cls.join(" ")}" data-id="${card.id}"><span class="Co">${cost}</span>${pw}${tr}${ct}${lm}<div class="Nm">${Esc(card.n)}</div></button>`;
 }
 const EMPTY_TILE = `<div class="NC Empty">NIVEL<br>ARENA</div>`;
 
@@ -2152,7 +2254,8 @@ function Render_Deck() {
   setPill(document.getElementById("D_CntDeck"), "덱", total, DECK_SIZE);
   setPill(document.getElementById("D_CntTrig"), "트리거", trig, MAX_TRIG);
   const st = Deck_Status(), stEl = document.getElementById("D_Status");
-  stEl.textContent = st.text; stEl.className = st.ok ? "Ok" : "No";
+  stEl.textContent = st.text; stEl.className = st.ok ? "Ok" : (st.bad ? "Bad" : "No");
+  const badSet = Limit_Violations(deck.cards, deck.leader);
 
   const lb = document.getElementById("D_Leader");
   if (L) {
@@ -2164,14 +2267,14 @@ function Render_Deck() {
 
   const trigCards = Sorted_Expanded(c => c.tr);
   document.getElementById("D_TrigSmall").textContent = `${trig} / ${MAX_TRIG}`;
-  let th = trigCards.slice(0, 12).map(c => Tile(c)).join("");
+  let th = trigCards.slice(0, 12).map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
   for (let i = trigCards.length; i < MAX_TRIG; i++) th += EMPTY_TILE;
   document.getElementById("D_TrigRow").innerHTML = th;
 
   const mainCards = Sorted_Expanded(c => !c.tr);
   const cap = Math.max(DECK_SIZE - Math.min(trig, MAX_TRIG), mainCards.length);
   document.getElementById("D_MainLab").textContent = `MAIN · ${mainCards.length}장`;
-  let mh = mainCards.map(c => Tile(c)).join("");
+  let mh = mainCards.map(c => Tile(c, { bad: badSet.has(c.id) })).join("");
   for (let i = mainCards.length; i < cap; i++) mh += EMPTY_TILE;
   const grid = document.getElementById("D_MainGrid");
   grid.innerHTML = mh;
@@ -2250,7 +2353,7 @@ function Render_Picker() {
   if (!list.length) { grid.innerHTML = `<div class="P_Empty">조건에 맞는 카드가 없어</div>`; return; }
   grid.innerHTML = list.map(c => {
     if (c.ty === "리") return Tile(c, { lead: true, count: deck.leader === c.id ? "선택됨" : "" });
-    return Tile(c, { off: !Can_Add(c).ok, count: deck.cards[c.id] ? deck.cards[c.id] + "/3" : "" });
+    return Tile(c, { off: !Can_Add(c).ok, count: deck.cards[c.id] ? deck.cards[c.id] + "/" + Max_Copies(c.id) : "" });
   }).join("");
 }
 document.getElementById("P_Grid").addEventListener("click", (e) => {
@@ -2310,6 +2413,43 @@ document.getElementById("DL_List").addEventListener("click", (e) => {
 document.getElementById("D_ClearBtn").addEventListener("click", () => {
   Ask("덱 초기화", "덱에 넣은 카드를 전부 뺄까? 리더와 덱 이름은 그대로 남아.", () => { deck.cards = {}; Deck_Changed(); Show_Toast("카드를 전부 뺐어"); });
 });
+
+// ---------- 리미트 레귤레이션 화면 ----------
+const LV_COL = { "화": "#c8364a", "대": "#1f9d6b", "폭": "#7b46c8", "파": "#2a72c8", "번": "#b8901c" };
+function LV_Row(id, badge = "") {
+  const c = CARD_BY_ID[id];
+  const col = c ? LV_COL[c.at] : "#555";
+  return `<div class="LV_Row"><span class="LV_Sq" style="background:${col}"></span><span class="LV_Id">${id}</span><span class="LV_Nm">${Esc(c ? c.n : id)}</span>${badge}</div>`;
+}
+function LV_Chg(id, now, cls) {
+  const old = LIMIT_REG.changed[id];
+  return old ? `<span class="LV_Chg"><span class="O">${old}</span><span class="A">▶</span><span class="W ${cls}">${now}</span></span>` : "";
+}
+function LV_Sec(color, title, count, body, extra = "") {
+  return `<div class="LV_Sec ${extra}"><button class="LV_Hd" style="--c:${color}"><span class="Ar">︿</span><span class="T">${title}</span><span class="N">${count}</span></button>${body}</div>`;
+}
+function Render_Limit() {
+  const R = LIMIT_REG;
+  document.getElementById("LV_DateTxt").textContent = R.date;
+  const rows = (ids, f) => `<div class="LV_Rows">${ids.map(id => LV_Row(id, f(id))).join("")}</div>`;
+  const pairs = R.pairs.map(([a, bs]) => `<div class="LV_P"><div class="PA">${LV_Row(a)}</div><span class="LV_X">✕</span><div class="PB">${bs.map(b => LV_Row(b)).join("")}</div></div>`).join("");
+  const rel = R.released.map(([a, b, w]) => `<div class="LV_P"><div class="PA">${LV_Row(a)}</div><span class="LV_X G">✕</span><div class="PB">${LV_Row(b)}</div><span class="LV_Why">${w}</span></div>`).join("");
+  document.getElementById("LV_Body").innerHTML =
+    LV_Sec("#c41622", "<b>금지</b> 카드", R.ban.length + "장", rows(R.ban, id => LV_Chg(id, "금지", "Red"))) +
+    LV_Sec("#e8792a", "<b>제한</b> 카드 (1장)", R.lim1.length + "장", rows(R.lim1, id => LV_Chg(id, "1장", "Ora"))) +
+    LV_Sec("#d9a62a", "<b>제한</b> 카드 (2장)", R.lim2.length + "장", rows(R.lim2, () => "")) +
+    LV_Sec("#8a3bd6", "<b>금지</b> 페어 · A와 B는 같은 덱에 넣을 수 없음", R.pairs.length + "조", pairs) +
+    LV_Sec("#1f9d6b", "<b>이번에 해제</b>된 금지 페어", R.released.length + "조", rel, "LV_Rel") +
+    `<div class="LV_Note">※ 공식 홈페이지 「금지·제한 카드 - 2026년 9월 7일」·「금지·제한 카드 설명 - 2026년 9월 8일」 기준 · 화살표는 이전 상태 ▶ 지금 상태</div>`;
+}
+function Show_Limit(show) {
+  const v = document.getElementById("LimitView");
+  v.classList.toggle("Show", show);
+  if (show) { Render_Limit(); document.getElementById("LV_Body").scrollTop = 0; }
+}
+document.getElementById("LV_Body").addEventListener("click", (e) => { const h = e.target.closest(".LV_Hd"); if (h) h.parentElement.classList.toggle("Fold"); });
+document.getElementById("LV_Home").addEventListener("click", () => { Show_Limit(false); Show_Home(true); });
+document.getElementById("Home_Limit").addEventListener("click", () => { Show_Home(false); Show_Limit(true); });
 
 // ---------- 열기 · 닫기 ----------
 function Show_Deck(show) { document.getElementById("DeckView").classList.toggle("Show", show); if (show) Render_Deck(); }
