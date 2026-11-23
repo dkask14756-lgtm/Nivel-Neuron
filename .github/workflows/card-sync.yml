@@ -79,7 +79,7 @@ jobs:
               return html.unescape(s).replace("\xa0", " ").strip()
 
           def cell(page, label):
-              m = re.search(r"<td class=['\"]h3['\"]>\s*" + label + r"\s*</td>\s*<td[^>]*>(.*?)</td>", page, re.S)
+              m = re.search(r"<td\s+class=['\"]h3['\"]>\s*" + label + r"\s*</td>\s*<td[^>]*>(.*?)</td>", page, re.S)
               return clean(m.group(1)) if m else ""
 
           def num(s):
@@ -88,8 +88,8 @@ jobs:
 
           # 카드 상세 페이지 → 앱 데이터 한 줄
           def parse_detail(page):
-              subj = re.search(r"<h2 id=['\"]subject['\"]>(.*?)</h[1-6]>", page, re.S)
-              typ = re.search(r"<h2 id=['\"]type['\"]>(.*?)</h[1-6]>", page, re.S)
+              subj = re.search(r"<h2\s+id=['\"]subject['\"]>(.*?)</h[1-6]>", page, re.S)
+              typ = re.search(r"<h2\s+id=['\"]type['\"]>(.*?)</h[1-6]>", page, re.S)
               if not subj or not typ: return None
               name = clean(subj.group(1))
               parts = [p.strip() for p in clean(typ.group(1)).split("/")]
@@ -98,10 +98,10 @@ jobs:
               if not re.fullmatch(r"[A-Z]+\d*-\d+", cid) or not ty or not at: return None
               ipn = cell(page, "IP")
               ip = IP_NAMES.index(ipn) if ipn in IP_NAMES else 6
-              cm = re.search(r"<div id=['\"]content['\"]>(.*?)</div>\s*</td>", page, re.S)
+              cm = re.search(r"<div\s+id=['\"]content['\"]>(.*?)</div>\s*</td>", page, re.S)
               content = cm.group(1) if cm else ""
               tr = 1 if ("triger_box" in content or re.search(r"<b>\s*트리거\s*</b>\s*/", content)) else 0
-              img = re.search(r"id=['\"]img['\"]>\s*<img src=['\"]([^'\"]+)['\"]", page)
+              img = re.search(r"id=['\"]img['\"]\s*>\s*<img[^>]*?\ssrc=['\"]([^'\"]+)['\"]", page)
               img_url = ""
               if img:
                   img_url = img.group(1).replace("../", BASE + "/") if img.group(1).startswith("../") else img.group(1)
