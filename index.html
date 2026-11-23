@@ -53,6 +53,45 @@
     display: grid; grid-template-rows: auto 1fr; gap: 12px;
   }
 
+  /* ---------- 홈 화면 ---------- */
+  #Home {
+    position: absolute; inset: 0; z-index: 10; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 56px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .72), rgba(2, 10, 36, .82)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #Home.Show { display: flex; }
+  .Home_Title { text-align: center; }
+  .Home_Sub { font-size: 18px; letter-spacing: 10px; font-weight: 800; color: var(--neon); }
+  .Home_Title h1 {
+    margin: 6px 0 0; font-size: 64px; font-weight: 900; font-style: italic; letter-spacing: 2px;
+    text-shadow: 0 0 18px rgba(79,227,255,.6);
+  }
+  .Home_Menu { display: flex; gap: 32px; }
+  .Home_Card {
+    position: relative; width: 300px; height: 340px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    background: linear-gradient(180deg, rgba(29, 95, 208, .85), rgba(8, 36, 110, .9));
+    border: 2px solid var(--neon); box-shadow: 0 0 22px rgba(79,227,255,.35);
+    clip-path: polygon(10% 0, 90% 0, 100% 8%, 100% 92%, 90% 100%, 10% 100%, 0 92%, 0 8%);
+  }
+  .Home_Card:active { filter: brightness(1.4); }
+  .Home_Icon { line-height: 0; color: var(--neon); filter: drop-shadow(0 0 10px var(--neon)); }
+  .Home_Name { font-size: 34px; font-weight: 900; }
+  .Home_Desc { font-size: 16px; color: var(--sub); font-weight: 700; padding: 0 16px; text-align: center; }
+  .Soon {
+    position: absolute; top: 22px; right: 26px; font-size: 14px; font-weight: 900;
+    padding: 3px 10px; background: var(--warn); color: #2a1a00; border-radius: 4px;
+  }
+  #Toast {
+    position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 20;
+    padding: 14px 28px; font-size: 20px; font-weight: 800; border-radius: 10px;
+    background: rgba(2, 10, 36, .92); border: 2px solid var(--neon);
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  #Toast.Show { opacity: 1; }
+
   /* ---------- 상단 ---------- */
   #Top_Bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
   .Hex_Btn {
@@ -265,8 +304,35 @@
 <div id="Bg"></div>
 <div id="Stage">
 <div id="App">
+  <!-- 홈 화면: 듀얼 / 덱 만들기 / 리미트 레귤레이션 -->
+  <section id="Home" class="Show">
+    <div class="Home_Title">
+      <div class="Home_Sub">NIVEL ARENA</div>
+      <h1>니벨아레나 뉴런</h1>
+    </div>
+    <div class="Home_Menu">
+      <button class="Home_Card" id="Home_Duel">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10 44 44M44 44l8 2-2-8M54 10 20 44M20 44l-8 2 2-8M14 50l6-6M50 50l-6-6"/></svg></div>
+        <div class="Home_Name">듀얼</div>
+        <div class="Home_Desc">레벨 · 대미지 · 사이즈 계산</div>
+      </button>
+      <button class="Home_Card" id="Home_Deck">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="14" width="30" height="40" rx="4"/><path d="M12 20v32a4 4 0 0 0 4 4h24"/><path d="M33 26l4 8-4 8-4-8z"/></svg></div>
+        <div class="Home_Name">덱 만들기</div>
+        <div class="Home_Desc">리더 1장 + 40장 · 트리거 최대 8장</div>
+        <span class="Soon">준비 중</span>
+      </button>
+      <button class="Home_Card" id="Home_Limit">
+        <div class="Home_Icon"><svg viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="22"/><path d="M17 17l30 30"/></svg></div>
+        <div class="Home_Name">리미트 레귤레이션</div>
+        <div class="Home_Desc">금지 · 제한 카드 목록</div>
+        <span class="Soon">준비 중</span>
+      </button>
+    </div>
+  </section>
+  <div id="Toast"></div>
   <div id="Top_Bar">
-    <div><button class="Hex_Btn" id="Btn_Close" aria-label="닫기">✕</button></div>
+    <div><button class="Util_Btn Top_Util" id="Btn_Home" aria-label="홈"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button></div>
     <div id="Timer_Box">
       <div class="Cap">DUEL TIME</div>
       <div id="Timer"><button id="Timer_Play">▶</button><span id="Timer_Text">00:00:00</span></div>
@@ -616,8 +682,21 @@ function Change_Awake_Level(id, delta) {
 document.querySelectorAll("[data-awake]").forEach(btn =>
   btn.addEventListener("click", () => Change_Awake_Level(btn.dataset.awake, Number(btn.dataset.d))));
 
-// 닫기(✕) 버튼: 지금은 비활성 — 스토어 출시 때 앱 종료 기능 연결 예정
-document.getElementById("Btn_Close").addEventListener("click", () => {});
+// ---------- 홈 화면 ----------
+function Show_Home(show) {
+  document.getElementById("Home").classList.toggle("Show", show);
+}
+function Show_Toast(text) {
+  const t = document.getElementById("Toast");
+  t.textContent = text;
+  t.classList.add("Show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
+}
+document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
+document.getElementById("Home_Duel").addEventListener("click", () => { Show_Home(false); Align_Awake_Button(); });
+document.getElementById("Home_Deck").addEventListener("click", () => Show_Toast("덱 만들기는 준비 중이야"));
+document.getElementById("Home_Limit").addEventListener("click", () => Show_Toast("리미트 레귤레이션은 준비 중이야"));
 document.getElementById("Btn_New").addEventListener("click", () => Show_Modal("Modal_Reset_Log", true));
 // 타이머 초기화 체크(■ 초기화 / □ 유지) — 예·아니오 어느 쪽이든 적용
 let resetTimerChecked = false;
