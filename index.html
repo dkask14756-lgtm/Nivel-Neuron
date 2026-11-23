@@ -365,8 +365,9 @@
   #Bottom_Bar { display: flex; justify-content: center; align-items: center; }
   .Util_Btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
   .Util_Btn .Hex_Btn { width: 66px; height: 66px; font-size: 26px; }
-  .Util_Btn.Top_Util { gap: 2px; font-size: 13px; }
-  .Util_Btn.Top_Util .Hex_Btn { width: 58px; height: 58px; font-size: 22px; }
+  .Util_Btn.Top_Util { gap: 4px; font-size: 16px; }
+  .Util_Btn.Top_Util .Hex_Btn { width: 82px; height: 82px; font-size: 32px; }   /* 덱 화면 홈 버튼과 같은 크기 */
+  .Util_Btn.Top_Util .Hex_Btn svg { width: 36px; height: 36px; }
 
   /* ---------- 모달 ---------- */
   .Modal_Back { position: fixed; inset: 0; background: rgba(0, 6, 25, .7); display: none; align-items: center; justify-content: center; z-index: 20; }
@@ -889,7 +890,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1815";
+const APP_VERSION = "20261123-1818";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
