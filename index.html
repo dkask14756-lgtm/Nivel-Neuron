@@ -214,6 +214,17 @@
   .NC .Ct { position: absolute; bottom: 38px; right: 4px; font-size: 13px; font-weight: 900; background: rgba(0,0,0,.6); padding: 1px 6px; border-radius: 9px; }
   .NC.Empty { border-color: rgba(79,227,255,.25); background: linear-gradient(150deg, #16051e, #2a0c3a 50%, #05122e); opacity: .45; justify-content: center; align-items: center; font-weight: 900; font-style: italic; font-size: 11px; color: #eaf6ff; }
   .NC.Off { filter: grayscale(.8) brightness(.55); }
+  /* 카드 이미지 (cards 폴더) - 불러오면 글자 대신 이미지, 못 불러오면 글자 카드 그대로 */
+  .NC .Im { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; opacity: 0; pointer-events: none; }
+  .NC.HasImg { border-width: 1px; }
+  .NC.HasImg .Im { opacity: 1; }
+  .NC.HasImg .Co, .NC.HasImg .Pw, .NC.HasImg .Tr, .NC.HasImg .Nm { display: none; }
+  .NC.HasImg .Ct { bottom: 4px; }
+  .NC.HasImg .Lm { bottom: 4px; }
+  #D_Leader .L_Img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+  #D_Leader.HasImg .L_Img { opacity: 1; }
+  #D_Leader.HasImg .L_Name, #D_Leader.HasImg .L_Info, #D_Leader.HasImg .L_Lv { display: none; }
+  #D_Leader.HasImg .L_Vow { top: auto; bottom: 0; left: 0; right: 0; padding: 5px 8px; background: rgba(2,10,36,.82); color: #eaf6ff; z-index: 1; }
   .a-화 { border-color: #ff8d9b; background: linear-gradient(170deg, #7a2236, #3a0d1a); }   .a-화 .Co, .a-화 .Nm, .L-화 .L_Name, .L-화 .L_Lv { background: #c8364a; }
   .a-대 { border-color: #5dffb0; background: linear-gradient(170deg, #1c6b4e, #0b2f22); }   .a-대 .Co, .a-대 .Nm, .L-대 .L_Name, .L-대 .L_Lv { background: #1f9d6b; }
   .a-폭 { border-color: #c79bff; background: linear-gradient(170deg, #4b2a7a, #1f0f3a); }   .a-폭 .Co, .a-폭 .Nm, .L-폭 .L_Name, .L-폭 .L_Lv { background: #7b46c8; }
@@ -947,7 +958,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1900";
+const APP_VERSION = "20261123-1930";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2224,6 +2235,10 @@ document.getElementById("DC_No").addEventListener("click", () => { document.getE
 
 // ---------- 카드 타일 ----------
 function Esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+function Card_Img(id) { return "cards/" + id + ".jpg"; }
+// 한 번 불러온 이미지는 기억해 두고, 다시 그릴 때 글자 카드가 깜빡이지 않게 바로 이미지로 표시
+const IMG_OK = new Set();
+function Img_Ok(el, id) { IMG_OK.add(id); el.parentNode.classList.add("HasImg"); }
 function Tile(card, opt = {}) {
   const cls = ["NC", "a-" + card.at];
   if (opt.off) cls.push("Off");
@@ -2235,7 +2250,9 @@ function Tile(card, opt = {}) {
   const ct = opt.count ? `<span class="Ct">${opt.count}</span>` : "";
   const mx = card.ty === "리" ? 3 : Max_Copies(card.id);
   const lm = mx === 0 ? `<span class="Lm Ban">금지</span>` : mx < 3 ? `<span class="Lm L${mx}">${mx}장</span>` : "";
-  return `<button class="${cls.join(" ")}" data-id="${card.id}"><span class="Co">${cost}</span>${pw}${tr}${ct}${lm}<div class="Nm">${Esc(card.n)}</div></button>`;
+  if (IMG_OK.has(card.id)) cls.push("HasImg");
+  const im = `<img class="Im" src="${Card_Img(card.id)}" alt="" loading="lazy" decoding="async" onload="Img_Ok(this,'${card.id}')" onerror="this.remove()">`;
+  return `<button class="${cls.join(" ")}" data-id="${card.id}">${im}<span class="Co">${cost}</span>${pw}${tr}${ct}${lm}<div class="Nm">${Esc(card.n)}</div></button>`;
 }
 const EMPTY_TILE = `<div class="NC Empty">NIVEL<br>ARENA</div>`;
 
@@ -2259,9 +2276,9 @@ function Render_Deck() {
 
   const lb = document.getElementById("D_Leader");
   if (L) {
-    lb.className = "Has L-" + L.at;
+    lb.className = "Has L-" + L.at + (IMG_OK.has(L.id) ? " HasImg" : "");
     const vow = L.vt === "O" ? `서약: [${ATTR_NAME[L.vc]}] 카드만` : `서약: [${ATTR_NAME[L.vc]}] 필수 + 1속성`;
-    lb.innerHTML = `<span class="L_Lv">LEVEL</span><div class="L_Vow">${vow}</div><div class="L_Name">${Esc(L.n)}</div>
+    lb.innerHTML = `<img class="L_Img" src="${Card_Img(L.id)}" alt="" onload="Img_Ok(this,'${L.id}')" onerror="this.remove()"><span class="L_Lv">LEVEL</span><div class="L_Vow">${vow}</div><div class="L_Name">${Esc(L.n)}</div>
       <div class="L_Info"><span>${L.id} · ${ATTR_NAME[L.at]}</span><span>각성 Lv ${L.aw ?? "-"} · ${IP_SHORT[L.ip]}</span></div>`;
   } else { lb.className = ""; lb.textContent = "리더를 눌러서 선택"; }
 
