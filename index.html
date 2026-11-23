@@ -958,7 +958,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1930";
+const APP_VERSION = "20261123-2130";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -1482,7 +1482,7 @@ BT06-054|풀 파티 세헤라자드|유|파|3|3000|1|0|3
 BT06-055|DJ 베나카|유|파|3|2000|1|0|3
 BT06-056|타락한 날개 올리비에|유|파|4|4000|2|0|3
 BT06-057|여름휴가 달비|유|파|4|3500|2|0|3
-BT06-058|오버히트 레비아|유|파|4|3000||0|3
+BT06-058|오버히트 레비아|유|파|4|3000|2|0|3
 BT06-059|시기의 밤 레비아|유|파|5|6000|2|0|3
 BT06-060|신실의 날개 올리비에|유|파|5|4000|2|0|3
 BT06-061|해변의 정의 미카엘라|유|파|5|5500|2|1|3
@@ -2239,6 +2239,9 @@ function Card_Img(id) { return "cards/" + id + ".jpg"; }
 // 한 번 불러온 이미지는 기억해 두고, 다시 그릴 때 글자 카드가 깜빡이지 않게 바로 이미지로 표시
 const IMG_OK = new Set();
 function Img_Ok(el, id) { IMG_OK.add(id); el.parentNode.classList.add("HasImg"); }
+// 못 불러온 이미지(아직 없는 카드)도 기억해서 같은 요청을 반복하지 않음
+const IMG_FAIL = new Set();
+function Img_Fail(el, id) { IMG_FAIL.add(id); el.remove(); }
 function Tile(card, opt = {}) {
   const cls = ["NC", "a-" + card.at];
   if (opt.off) cls.push("Off");
@@ -2251,7 +2254,7 @@ function Tile(card, opt = {}) {
   const mx = card.ty === "리" ? 3 : Max_Copies(card.id);
   const lm = mx === 0 ? `<span class="Lm Ban">금지</span>` : mx < 3 ? `<span class="Lm L${mx}">${mx}장</span>` : "";
   if (IMG_OK.has(card.id)) cls.push("HasImg");
-  const im = `<img class="Im" src="${Card_Img(card.id)}" alt="" loading="lazy" decoding="async" onload="Img_Ok(this,'${card.id}')" onerror="this.remove()">`;
+  const im = IMG_FAIL.has(card.id) ? "" : `<img class="Im" src="${Card_Img(card.id)}" alt="" loading="lazy" decoding="async" onload="Img_Ok(this,'${card.id}')" onerror="Img_Fail(this,'${card.id}')">`;
   return `<button class="${cls.join(" ")}" data-id="${card.id}">${im}<span class="Co">${cost}</span>${pw}${tr}${ct}${lm}<div class="Nm">${Esc(card.n)}</div></button>`;
 }
 const EMPTY_TILE = `<div class="NC Empty">NIVEL<br>ARENA</div>`;
@@ -2278,7 +2281,7 @@ function Render_Deck() {
   if (L) {
     lb.className = "Has L-" + L.at + (IMG_OK.has(L.id) ? " HasImg" : "");
     const vow = L.vt === "O" ? `서약: [${ATTR_NAME[L.vc]}] 카드만` : `서약: [${ATTR_NAME[L.vc]}] 필수 + 1속성`;
-    lb.innerHTML = `<img class="L_Img" src="${Card_Img(L.id)}" alt="" onload="Img_Ok(this,'${L.id}')" onerror="this.remove()"><span class="L_Lv">LEVEL</span><div class="L_Vow">${vow}</div><div class="L_Name">${Esc(L.n)}</div>
+    lb.innerHTML = (IMG_FAIL.has(L.id) ? "" : `<img class="L_Img" src="${Card_Img(L.id)}" alt="" onload="Img_Ok(this,'${L.id}')" onerror="Img_Fail(this,'${L.id}')">`) + `<span class="L_Lv">LEVEL</span><div class="L_Vow">${vow}</div><div class="L_Name">${Esc(L.n)}</div>
       <div class="L_Info"><span>${L.id} · ${ATTR_NAME[L.at]}</span><span>각성 Lv ${L.aw ?? "-"} · ${IP_SHORT[L.ip]}</span></div>`;
   } else { lb.className = ""; lb.textContent = "리더를 눌러서 선택"; }
 
