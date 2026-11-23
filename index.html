@@ -84,6 +84,47 @@
     position: absolute; top: 22px; right: 26px; font-size: 14px; font-weight: 900;
     padding: 3px 10px; background: var(--warn); color: #2a1a00; border-radius: 4px;
   }
+  /* ---------- 듀얼 준비 화면 (각성 레벨 설정) ---------- */
+  #Setup {
+    position: absolute; inset: 0; z-index: 10; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+    background:
+      linear-gradient(180deg, rgba(2, 10, 36, .72), rgba(2, 10, 36, .82)),
+      url("bg.jpg") center / cover no-repeat, #041a4a;
+  }
+  #Setup.Show { display: flex; }
+  .Setup_Title { text-align: center; }
+  .Setup_Title h1 { margin: 6px 0 0; font-size: 48px; font-weight: 900; font-style: italic; letter-spacing: 2px; text-shadow: 0 0 18px rgba(79,227,255,.6); }
+  .Setup_Title p { margin: 10px 0 0; font-size: 18px; color: var(--sub); font-weight: 700; }
+  .Setup_Row { display: flex; gap: 40px; }
+  .Setup_Card {
+    --accent: var(--p1);
+    width: 400px; padding: 28px 24px 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    background: linear-gradient(180deg, rgba(29, 95, 208, .55), rgba(8, 36, 110, .8));
+    border: 2px solid var(--accent); box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 35%, transparent);
+    clip-path: polygon(8% 0, 92% 0, 100% 10%, 100% 90%, 92% 100%, 8% 100%, 0 90%, 0 10%);
+  }
+  .Setup_Card.p2 { --accent: var(--p2); }
+  .Setup_Name { font-size: 32px; font-weight: 900; font-style: italic; color: var(--accent); text-shadow: 0 0 10px var(--accent); }
+  .Setup_Cap { font-size: 15px; letter-spacing: 3px; font-weight: 800; color: var(--sub); }
+  .Setup_Step { display: flex; align-items: center; gap: 18px; }
+  .Setup_Step button {
+    width: 96px; height: 96px; font-size: 52px; font-weight: 900;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 1px solid var(--neon2);
+  }
+  .Setup_Step button:active { filter: brightness(1.5); }
+  .Setup_Step b { min-width: 150px; text-align: center; font-size: 72px; font-weight: 900; color: #ffd56b; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(255,201,79,.5); }
+  .Setup_Actions { display: flex; gap: 20px; }
+  .Setup_Actions button {
+    width: 230px; height: 72px; font-size: 24px; font-weight: 900; letter-spacing: 1px;
+    background: linear-gradient(180deg, #1d5fd0, #0b2f86); border: 2px solid var(--neon2);
+    clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+  }
+  .Setup_Actions .Setup_Start { background: linear-gradient(180deg, #2a8bff, #0b3aa8); border-color: var(--neon); box-shadow: 0 0 18px rgba(79,227,255,.5); }
+  .Setup_Actions button:active { filter: brightness(1.4); }
+  #Btn_Setup_Continue[hidden] { display: none; }
+
   #Toast {
     position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); z-index: 20;
     padding: 14px 28px; font-size: 20px; font-weight: 800; border-radius: 10px;
@@ -328,6 +369,32 @@
         <div class="Home_Desc">금지 · 제한 카드 목록</div>
         <span class="Soon">준비 중</span>
       </button>
+    </div>
+  </section>
+
+  <!-- 듀얼 준비: 각성 레벨 설정 후 듀얼 시작 -->
+  <section id="Setup">
+    <div class="Setup_Title">
+      <div class="Home_Sub">DUEL SETUP</div>
+      <h1>각성 레벨 설정</h1>
+      <p>리더 카드에 적힌 각성 레벨을 설정해줘. 이 레벨에 도달하면 각성 표시가 켜져.</p>
+    </div>
+    <div class="Setup_Row">
+      <div class="Setup_Card p1">
+        <div class="Setup_Name">PLAYER 01</div>
+        <div class="Setup_Cap">AWAKE LEVEL</div>
+        <div class="Setup_Step"><button data-awake="p1" data-d="-1">−</button><b id="Setup_Val_p1">Lv 5</b><button data-awake="p1" data-d="1">+</button></div>
+      </div>
+      <div class="Setup_Card p2">
+        <div class="Setup_Name">PLAYER 02</div>
+        <div class="Setup_Cap">AWAKE LEVEL</div>
+        <div class="Setup_Step"><button data-awake="p2" data-d="-1">−</button><b id="Setup_Val_p2">Lv 5</b><button data-awake="p2" data-d="1">+</button></div>
+      </div>
+    </div>
+    <div class="Setup_Actions">
+      <button id="Btn_Setup_Back">← 홈</button>
+      <button id="Btn_Setup_Continue" hidden>이어하기</button>
+      <button class="Setup_Start" id="Btn_Setup_Start">듀얼 시작</button>
     </div>
   </section>
   <div id="Toast"></div>
@@ -660,6 +727,8 @@ function Render_All() {
   Render_Panel("p2");
   document.getElementById("Awake_Val_p1").textContent = "Lv " + state.p1.awakeLevel;
   document.getElementById("Awake_Val_p2").textContent = "Lv " + state.p2.awakeLevel;
+  document.getElementById("Setup_Val_p1").textContent = "Lv " + state.p1.awakeLevel;
+  document.getElementById("Setup_Val_p2").textContent = "Lv " + state.p2.awakeLevel;
   Render_Timer();
   Save_State();
 }
@@ -694,7 +763,41 @@ function Show_Toast(text) {
   t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
 }
 document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
-document.getElementById("Home_Duel").addEventListener("click", () => { Show_Home(false); Align_Awake_Button(); });
+document.getElementById("Home_Duel").addEventListener("click", () => { Show_Setup(true); Show_Home(false); });
+
+// ---------- 듀얼 준비 화면 ----------
+// 진행 중인 듀얼이 있는지 (있으면 "이어하기" 버튼 표시)
+function Has_Progress() {
+  return ["p1", "p2"].some(id => {
+    const p = state[id];
+    return p.level > 1 || p.damage > 0 || p.fieldCost > 0;
+  }) || state.timerMs > 0;
+}
+function Show_Setup(show) {
+  document.getElementById("Btn_Setup_Continue").hidden = !Has_Progress();
+  document.getElementById("Setup").classList.toggle("Show", show);
+  if (!show) Align_Awake_Button();
+}
+// 듀얼 시작: 설정한 각성 레벨은 유지하고 나머지(레벨·대미지·코스트·타이머·로그)는 새로 시작
+function Start_Duel() {
+  Timer_Stop();
+  state.timerMs = 0;
+  for (const id of ["p1", "p2"]) {
+    const awake = state[id].awakeLevel;
+    state[id] = Make_Player();
+    state[id].awakeLevel = awake;
+  }
+  state.turnPlayer = null;
+  state.turnCount = 0;
+  state.log = [];
+  history = [];
+  Add_Log(`듀얼 시작 — 각성 P1 Lv ${state.p1.awakeLevel} / P2 Lv ${state.p2.awakeLevel}`);
+  Render_All();
+  Show_Setup(false);
+}
+document.getElementById("Btn_Setup_Start").addEventListener("click", Start_Duel);
+document.getElementById("Btn_Setup_Continue").addEventListener("click", () => Show_Setup(false));
+document.getElementById("Btn_Setup_Back").addEventListener("click", () => { Show_Home(true); Show_Setup(false); });
 document.getElementById("Home_Deck").addEventListener("click", () => Show_Toast("덱 만들기는 준비 중이야"));
 document.getElementById("Home_Limit").addEventListener("click", () => Show_Toast("리미트 레귤레이션은 준비 중이야"));
 document.getElementById("Btn_New").addEventListener("click", () => Show_Modal("Modal_Reset_Log", true));
