@@ -947,7 +947,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1850";
+const APP_VERSION = "20261123-1900";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2304,7 +2304,7 @@ document.getElementById("P_Search").addEventListener("input", (e) => { PF.q = e.
 function Build_Filters() {
   const g = (title, key, items, multi = true) => {
     const chips = items.map(([v, label]) => {
-      const on = multi ? PF[key].has(v) : PF[key] === v;
+      const on = multi ? PF[key].has(v) : String(PF[key]) === v;   // "보기"는 true/false 값이라 글자로 바꿔서 비교
       return `<button class="P_Chip${on ? " On" : ""}" data-k="${key}" data-v="${v}" data-m="${multi ? 1 : 0}">${label}</button>`;
     }).join("");
     return `<div class="P_Group"><div class="P_GLab">${title}</div><div class="P_Chips">${chips}</div></div>`;
