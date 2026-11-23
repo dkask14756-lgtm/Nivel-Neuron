@@ -32,14 +32,14 @@
     background: #041a4a;
   }
   #Bg {
-    position: fixed; inset: 0; z-index: -1;
+    position: fixed; inset: 0; z-index: 0;   /* 음수 z-index는 아이폰·아이패드에서 배경이 가려질 수 있어서 0으로 */
     background:
       linear-gradient(180deg, rgba(2, 12, 40, .45), rgba(2, 12, 40, .55)),
       url("bg.jpg") center / cover no-repeat;
   }
   /* 노치·상태바를 피한 실제 사용 영역 */
   #Stage {
-    position: fixed;
+    position: fixed; z-index: 1;
     top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
     left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
     overflow: hidden;
@@ -114,15 +114,15 @@
     font-family: inherit; font-size: 24px; font-weight: 900; font-style: italic; color: var(--text);
     background: transparent; border: none; border-bottom: 2px solid var(--neon); padding: 2px 8px; width: 300px; outline: none;
   }
-  .D_Counts { margin-left: auto; display: flex; gap: 8px; }
-  .D_Pill { padding: 6px 12px; font-weight: 900; font-size: 16px; background: rgba(2,14,50,.75); border: 1px solid rgba(79,227,255,.5); white-space: nowrap; }
-  .D_Pill b { font-size: 21px; color: #fff; margin: 0 2px 0 4px; }
+  .D_Counts { margin-left: auto; display: flex; gap: 10px; }
+  .D_Pill { height: 60px; display: flex; align-items: center; padding: 0 18px; font-weight: 900; font-size: 22px; background: rgba(2,14,50,.75); border: 2px solid rgba(79,227,255,.5); white-space: nowrap; }
+  .D_Pill b { font-size: 30px; color: #fff; margin: 0 4px 0 8px; }
   .D_Pill.Full b { color: var(--warn); }
-  #D_Status { padding: 6px 12px; font-weight: 900; font-size: 15px; border: 1px solid; white-space: nowrap; }
+  #D_Status { height: 60px; display: flex; align-items: center; padding: 0 18px; font-weight: 900; font-size: 22px; border: 2px solid; white-space: nowrap; }
   #D_Status.Ok { background: #1f9d6b; border-color: #5dffb0; color: #eafff4; }
   #D_Status.No { background: rgba(2,14,50,.75); border-color: rgba(143,182,232,.5); color: var(--sub); }
   .D_Btn {
-    padding: 9px 20px; font-weight: 900; font-size: 16px;
+    height: 60px; padding: 0 34px; font-weight: 900; font-size: 22px;
     background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon);
     clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
   }
@@ -150,9 +150,9 @@
   #D_TrigRow { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; height: 118px; }
   .D_MainHead { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
   #D_MainGrid { flex: 1; min-height: 0; margin-top: 6px; display: grid; grid-template-columns: repeat(11, 1fr); grid-auto-rows: 1fr; gap: 7px; }
-  .D_Bottom { display: flex; justify-content: center; gap: 14px; margin-top: 10px; }
-  .D_Sub { padding: 10px 26px; font-size: 17px; font-weight: 800; background: rgba(2,14,50,.8); border: 1px solid rgba(79,227,255,.5); }
-  .D_Add { padding: 10px 40px; font-size: 20px; font-weight: 900; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); box-shadow: 0 0 16px rgba(79,227,255,.45); }
+  .D_Bottom { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
+  .D_Sub { height: 76px; width: 230px; font-size: 26px; font-weight: 900; background: rgba(2,14,50,.85); border: 2px solid rgba(79,227,255,.6); }
+  .D_Add { height: 76px; width: 340px; font-size: 30px; font-weight: 900; background: linear-gradient(180deg, #1d6fe8, #0a2f8a); border: 2px solid var(--neon); box-shadow: 0 0 16px rgba(79,227,255,.45); }
 
   /* 카드 타일 */
   .NC { position: relative; border-radius: 5px; overflow: hidden; border: 2px solid; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; text-align: center; }
@@ -466,10 +466,6 @@
   <section id="DeckView">
     <div class="D_Top">
       <button class="Util_Btn Top_Util" id="D_Home"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button>
-      <div>
-        <div class="D_Title">DECK BUILDER</div>
-        <input id="D_Name" maxlength="20" placeholder="덱 이름">
-      </div>
       <div class="D_Counts">
         <div class="D_Pill" id="D_CntDeck">덱<b>0</b>/ 40</div>
         <div class="D_Pill" id="D_CntTrig">트리거<b>0</b>/ 8</div>
@@ -891,7 +887,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1757";
+const APP_VERSION = "20261123-1806";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2149,7 +2145,6 @@ function Sorted_Expanded(filterFn) {
 // ---------- 덱 화면 그리기 ----------
 function Render_Deck() {
   const total = Deck_Total(), trig = Deck_Trig(), L = Leader();
-  document.getElementById("D_Name").value = deck.name || "";
   const setPill = (el, label, v, max) => { el.innerHTML = `${label}<b>${v}</b>/ ${max}`; el.classList.toggle("Full", v >= max); };
   setPill(document.getElementById("D_CntDeck"), "덱", total, DECK_SIZE);
   setPill(document.getElementById("D_CntTrig"), "트리거", trig, MAX_TRIG);
@@ -2183,7 +2178,6 @@ function Render_Deck() {
 document.getElementById("D_TrigRow").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
 document.getElementById("D_MainGrid").addEventListener("click", (e) => { const b = e.target.closest(".NC[data-id]"); if (b) Remove_Card(b.dataset.id); });
 document.getElementById("D_Leader").addEventListener("click", () => Open_Picker(true));
-document.getElementById("D_Name").addEventListener("input", (e) => { deck.name = e.target.value; Save_Current(); });
 
 // ---------- 카드 추가 창 ----------
 const PF = { q: "", type: new Set(), at: new Set(), cost: new Set(), pow: new Set(), hit: new Set(), trig: "all", ip: new Set(), only: true };
