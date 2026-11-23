@@ -91,6 +91,12 @@
     opacity: 0; pointer-events: none; transition: opacity .2s;
   }
   #Toast.Show { opacity: 1; }
+  #Update_Bar {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 30; display: none;
+    padding: 14px 30px; font-size: 20px; font-weight: 900; color: #2a1a00;
+    background: linear-gradient(90deg, #ffe27a, #ff9f43); border: 2px solid #fff3c4; box-shadow: 0 0 20px rgba(255,180,70,.6);
+  }
+  #Update_Bar.Show { display: block; }
 
 
   /* ================= 덱 만들기 ================= */
@@ -531,6 +537,7 @@
   </section>
 
   <div id="Toast"></div>
+  <button id="Update_Bar">새 버전이 있어 · 눌러서 업데이트</button>
   <div id="Top_Bar">
     <div><button class="Util_Btn Top_Util" id="Btn_Home" aria-label="홈"><div class="Hex_Btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></div>홈</button></div>
     <div id="Timer_Box">
@@ -576,15 +583,15 @@
 <!-- 각성 설정 -->
 <div class="Modal_Back" id="Modal_Awake">
   <div class="Modal">
-    <h2>각성 레벨</h2>
-    <p>리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.</p>
+    <h2 id="Awake_Title">각성 레벨</h2>
+    <p id="Awake_Desc">리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.</p>
     <div class="Awake_Set">
       <span style="color:var(--p1)">PLAYER 01</span>
       <div class="Stepper"><button data-awake="p1" data-d="-1">−</button><b id="Awake_Val_p1">5</b><button data-awake="p1" data-d="1">+</button></div>
       <span style="color:var(--p2)">PLAYER 02</span>
       <div class="Stepper"><button data-awake="p2" data-d="-1">−</button><b id="Awake_Val_p2">5</b><button data-awake="p2" data-d="1">+</button></div>
     </div>
-    <div class="Modal_Row"><button data-close>닫기</button></div>
+    <div class="Modal_Row"><button data-close id="Awake_Ok">닫기</button></div>
   </div>
 </div>
 
@@ -882,6 +889,24 @@ function Change_Awake_Level(id, delta) {
 document.querySelectorAll("[data-awake]").forEach(btn =>
   btn.addEventListener("click", () => Change_Awake_Level(btn.dataset.awake, Number(btn.dataset.d))));
 
+// ---------- 자동 업데이트 확인 ----------
+// 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
+const APP_VERSION = "20261123-1757";
+async function Check_Update() {
+  try {
+    if (location.protocol === "file:") return;
+    const text = await fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" }).then(r => r.text());
+    const m = text.match(/const APP_VERSION = "([^"]+)"/);
+    if (m && m[1] !== APP_VERSION) document.getElementById("Update_Bar").classList.add("Show");
+  } catch (e) {}
+}
+document.getElementById("Update_Bar").addEventListener("click", () => {
+  location.replace(location.pathname + "?v=" + Date.now());   // 저장된 예전 파일 대신 새로 받기
+});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") Check_Update(); });
+window.addEventListener("pageshow", Check_Update);
+setTimeout(Check_Update, 1500);
+
 // ---------- 홈 화면 ----------
 function Show_Home(show) {
   document.getElementById("Home").classList.toggle("Show", show);
@@ -894,7 +919,19 @@ function Show_Toast(text) {
   t._timer = setTimeout(() => t.classList.remove("Show"), 1600);
 }
 document.getElementById("Btn_Home").addEventListener("click", () => Show_Home(true));
-document.getElementById("Home_Duel").addEventListener("click", () => { Show_Home(false); Align_Awake_Button(); });
+document.getElementById("Home_Duel").addEventListener("click", () => {
+  Show_Home(false); Align_Awake_Button();
+  Open_Awake(true);   // 듀얼 들어갈 때 각성 레벨부터 설정
+});
+// 각성 레벨 창: 듀얼 시작 전이면 문구를 바꿔서 띄움
+function Open_Awake(beforeDuel) {
+  document.getElementById("Awake_Title").textContent = beforeDuel ? "듀얼 시작 전 각성 레벨 설정" : "각성 레벨";
+  document.getElementById("Awake_Desc").textContent = beforeDuel
+    ? "두 플레이어 리더의 각성 레벨을 먼저 맞춰줘."
+    : "리더 카드마다 각성 레벨이 달라. 이 레벨에 도달하면 각성 표시가 켜져.";
+  document.getElementById("Awake_Ok").textContent = beforeDuel ? "듀얼 시작" : "닫기";
+  Show_Modal("Modal_Awake", true);
+}
 document.getElementById("Home_Deck").addEventListener("click", () => { Show_Home(false); Show_Deck(true); });
 document.getElementById("Home_Limit").addEventListener("click", () => Show_Toast("리미트 레귤레이션은 준비 중이야"));
 
@@ -2298,7 +2335,7 @@ function Confirm_Reset(clearLog) {
 }
 document.getElementById("Btn_Log_Yes").addEventListener("click", () => Confirm_Reset(true));
 document.getElementById("Btn_Log_No").addEventListener("click", () => Confirm_Reset(false));
-document.getElementById("Btn_Awake_Center").addEventListener("click", () => Show_Modal("Modal_Awake", true));
+document.getElementById("Btn_Awake_Center").addEventListener("click", () => Open_Awake(false));
 document.getElementById("Btn_Undo").addEventListener("click", Undo);
 document.getElementById("Btn_Log").addEventListener("click", () => { Render_Log(); Show_Modal("Modal_Log", true); });
 document.getElementById("Btn_Dice").addEventListener("click", () => Show_Modal("Modal_Dice", true));
