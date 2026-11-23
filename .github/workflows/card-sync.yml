@@ -51,6 +51,7 @@ jobs:
           MAP_FILE = os.path.join(IMG_DIR, "wr_map.json")
           MAX_NEW = int(os.environ.get("MAX_NEW") or 0)        # 0 = 제한 없음 (시험할 때만 숫자)
           IMG_MAX = 260                                         # 이미지 긴 변 크기(px)
+          LEADER_IMG_MAX = 400                                  # 리더 이미지 긴 변 크기(px) - 가로로 크게 보여서 조금 크게
           SLEEP = 1.0                                           # 요청 간격(초) - 사이트에 부담 안 주게 천천히
 
           TYPE = {"리더": "리", "유닛": "유", "스킬": "스", "아이템": "아"}
@@ -123,10 +124,32 @@ jobs:
               page = get(f"{BASE}/bbs/board.php?bo_table=cardlists&page={n}")
               return [int(x) for x in re.findall(r"data-info=['\"][^'\"]*?♬(\d+)['\"]", page)]
 
-          def save_image(url, cid):
+          # 리더 카드 이미지는 기본면(위)과 각성면(아래)이 한 장에 붙어 있음 → 위쪽 기본면만 잘라냄
+          def leader_front(im):
+              w, h = im.size
+              if h <= w: return im                      # 이미 가로 한 장이면 그대로
+              g = im.convert("L")
+              best, best_y = -1, h // 2
+              for y in range(int(h * 0.4), int(h * 0.6)):   # 가운데 근처에서 가장 하얀 가로줄(두 면 사이 틈) 찾기
+                  row = [g.getpixel((x, y)) for x in range(0, w, 2)]
+                  score = sum(row) / len(row) - (max(row) - min(row)) * 0.3
+                  if score > best: best, best_y = score, y
+              top = im.crop((0, 0, w, best_y))
+              # 아래쪽에 남은 하얀 틈 줄 정리
+              while top.height > h * 0.35:
+                  row = [g.getpixel((x, top.height - 1)) for x in range(0, w, 2)]
+                  if min(row) > 225: top = top.crop((0, 0, w, top.height - 1))
+                  else: break
+              return top
+
+          def save_image(url, cid, leader=False):
               data = get(url, binary=True)
               im = Image.open(io.BytesIO(data)).convert("RGB")
-              im.thumbnail((IMG_MAX, IMG_MAX), Image.LANCZOS)
+              if leader:
+                  im = leader_front(im)
+                  im.thumbnail((LEADER_IMG_MAX, LEADER_IMG_MAX), Image.LANCZOS)
+              else:
+                  im.thumbnail((IMG_MAX, IMG_MAX), Image.LANCZOS)
               im.save(os.path.join(IMG_DIR, cid + ".jpg"), "JPEG", quality=72, optimize=True, progressive=True)
 
           def main():
@@ -181,8 +204,13 @@ jobs:
                   if url and cid not in first: first[cid] = url
               got = 0
               for cid, url in sorted(first.items()):
-                  if os.path.exists(os.path.join(IMG_DIR, cid + ".jpg")): continue
-                  try: save_image(url, cid); got += 1
+                  path = os.path.join(IMG_DIR, cid + ".jpg")
+                  leader = cid in data and data[cid].split("|")[2] == "리"
+                  if os.path.exists(path):
+                      if not leader: continue
+                      with Image.open(path) as old:
+                          if old.width >= old.height: continue      # 이미 기본면만 잘라둔 리더 이미지
+                  try: save_image(url, cid, leader); got += 1
                   except Exception as e: log(f"  이미지 실패: {cid}")
 
               # 4) 저장
