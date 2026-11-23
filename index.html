@@ -947,7 +947,7 @@ document.querySelectorAll("[data-awake]").forEach(btn =>
 
 // ---------- 자동 업데이트 확인 ----------
 // 앱을 열거나 다시 화면에 띄울 때, 깃허브에 올라간 최신 파일의 버전과 비교
-const APP_VERSION = "20261123-1840";
+const APP_VERSION = "20261123-1850";
 async function Check_Update() {
   try {
     if (location.protocol === "file:") return;
@@ -2148,7 +2148,7 @@ function Can_Add(card) {
   if (!Color_Ok(card, L)) return { ok: false, why: "리더 서약에 맞지 않는 속성이야" };
   const mx = Max_Copies(card.id);
   if (mx === 0) return { ok: false, why: "금지 카드라서 덱에 넣을 수 없어" };
-  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `제한 카드라서 ${mx}장까지야` : "같은 카드는 3장까지야" };
+  if ((deck.cards[card.id] || 0) >= mx) return { ok: false, why: mx < MAX_SAME ? `${mx === 2 ? "준제한" : "제한"} 카드라서 ${mx}장까지야` : "같은 카드는 3장까지야" };
   const pp = Pair_Partners(card.id).find(p => deck.cards[p] || deck.leader === p);
   if (pp) return { ok: false, why: `금지 페어: ${CARD_BY_ID[pp] ? CARD_BY_ID[pp].n : pp}와(과) 같이 넣을 수 없어` };
   if (Deck_Total() >= DECK_SIZE) return { ok: false, why: "덱이 40장 꽉 찼어" };
@@ -2436,8 +2436,8 @@ function Render_Limit() {
   const rel = R.released.map(([a, b, w]) => `<div class="LV_P"><div class="PA">${LV_Row(a)}</div><span class="LV_X G">✕</span><div class="PB">${LV_Row(b)}</div><span class="LV_Why">${w}</span></div>`).join("");
   document.getElementById("LV_Body").innerHTML =
     LV_Sec("#c41622", "<b>금지</b> 카드", R.ban.length + "장", rows(R.ban, id => LV_Chg(id, "금지", "Red"))) +
-    LV_Sec("#e8792a", "<b>제한</b> 카드 (1장)", R.lim1.length + "장", rows(R.lim1, id => LV_Chg(id, "1장", "Ora"))) +
-    LV_Sec("#d9a62a", "<b>제한</b> 카드 (2장)", R.lim2.length + "장", rows(R.lim2, () => "")) +
+    LV_Sec("#e8792a", "<b>제한</b> 카드", R.lim1.length + "장", rows(R.lim1, id => LV_Chg(id, "1장", "Ora"))) +
+    LV_Sec("#d9a62a", "<b>준제한</b> 카드", R.lim2.length + "장", rows(R.lim2, () => "")) +
     LV_Sec("#8a3bd6", "<b>금지</b> 페어 · A와 B는 같은 덱에 넣을 수 없음", R.pairs.length + "조", pairs) +
     LV_Sec("#1f9d6b", "<b>이번에 해제</b>된 금지 페어", R.released.length + "조", rel, "LV_Rel") +
     `<div class="LV_Note">※ 공식 홈페이지 「금지·제한 카드 - 2026년 9월 7일」·「금지·제한 카드 설명 - 2026년 9월 8일」 기준 · 화살표는 이전 상태 ▶ 지금 상태</div>`;
