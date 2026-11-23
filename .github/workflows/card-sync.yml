@@ -1,0 +1,211 @@
+# 니벨아레나 뉴런 - 카드 자동 업데이트
+# 매일 새벽 4시 7분(한국 시간)에 공식 사이트에서 새 카드 정보와 카드 이미지를 가져와서 저장소에 올림
+# Actions 탭에서 "Run workflow" 버튼으로 바로 실행할 수도 있음
+
+name: 카드 자동 업데이트
+
+on:
+  schedule:
+    - cron: "7 19 * * *"
+  workflow_dispatch:
+    inputs:
+      max_new:
+        description: "이번에 읽을 새 게시글 수 (0 = 전부, 시험할 때만 숫자)"
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: card-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 이미지 도구 설치
+        run: pip install pillow
+
+      - name: 공식 사이트에서 카드 가져오기
+        env:
+          MAX_NEW: ${{ github.event.inputs.max_new }}
+        run: |
+          cat > /tmp/update_cards.py <<'PY'
+          # 니벨아레나 뉴런 - 공식 사이트에서 새 카드 정보와 카드 이미지를 자동으로 가져오는 프로그램
+          # 깃허브 Actions 에서 매일 한 번 실행됨
+          import html, io, json, os, re, sys, time, urllib.request
+          from PIL import Image
+
+          BASE = "http://nivelarena.co.kr"
+          ROOT = os.environ.get("REPO_ROOT", ".")
+          INDEX = os.path.join(ROOT, "index.html")
+          IMG_DIR = os.path.join(ROOT, "cards")
+          MAP_FILE = os.path.join(IMG_DIR, "wr_map.json")
+          MAX_NEW = int(os.environ.get("MAX_NEW") or 0)        # 0 = 제한 없음 (시험할 때만 숫자)
+          IMG_MAX = 260                                         # 이미지 긴 변 크기(px)
+          SLEEP = 0.25
+
+          TYPE = {"리더": "리", "유닛": "유", "스킬": "스", "아이템": "아"}
+          ATTR = {"화염": "화", "대지": "대", "폭풍": "폭", "파도": "파", "번개": "번"}
+          IP_NAMES = ["승리의 여신: 니케", "블루 아카이브", "이터널 리턴", "브라운더스트2", "스텔라 블레이드", "에픽세븐", "기타"]
+
+          log_lines = []
+          def log(s):
+              print(s, flush=True); log_lines.append(s)
+
+          def get(url, binary=False):
+              for i in range(3):
+                  try:
+                      req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (NivelNeuron card sync)"})
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          data = r.read()
+                      time.sleep(SLEEP)
+                      return data if binary else data.decode("utf-8", "replace")
+                  except Exception as e:
+                      if i == 2: raise
+                      time.sleep(2 + i * 3)
+
+          def clean(s):
+              s = re.sub(r"<[^>]+>", "", s)
+              return html.unescape(s).replace("\xa0", " ").strip()
+
+          def cell(page, label):
+              m = re.search(r"<td class=['\"]h3['\"]>\s*" + label + r"\s*</td>\s*<td[^>]*>(.*?)</td>", page, re.S)
+              return clean(m.group(1)) if m else ""
+
+          def num(s):
+              s = s.replace(",", "").strip()
+              return s if re.fullmatch(r"\d+", s) else ""
+
+          # 카드 상세 페이지 → 앱 데이터 한 줄
+          def parse_detail(page):
+              subj = re.search(r"<h2 id=['\"]subject['\"]>(.*?)</h[1-6]>", page, re.S)
+              typ = re.search(r"<h2 id=['\"]type['\"]>(.*?)</h[1-6]>", page, re.S)
+              if not subj or not typ: return None
+              name = clean(subj.group(1))
+              parts = [p.strip() for p in clean(typ.group(1)).split("/")]
+              if len(parts) < 3: return None
+              cid, ty, at = parts[0], TYPE.get(parts[1]), ATTR.get(parts[2])
+              if not re.fullmatch(r"[A-Z]+\d*-\d+", cid) or not ty or not at: return None
+              ipn = cell(page, "IP")
+              ip = IP_NAMES.index(ipn) if ipn in IP_NAMES else 6
+              cm = re.search(r"<div id=['\"]content['\"]>(.*?)</div>\s*</td>", page, re.S)
+              content = cm.group(1) if cm else ""
+              tr = 1 if ("triger_box" in content or re.search(r"<b>\s*트리거\s*</b>\s*/", content)) else 0
+              img = re.search(r"id=['\"]img['\"]>\s*<img src=['\"]([^'\"]+)['\"]", page)
+              img_url = ""
+              if img:
+                  img_url = img.group(1).replace("../", BASE + "/") if img.group(1).startswith("../") else img.group(1)
+                  if img_url.startswith("/"): img_url = BASE + img_url
+              if ty == "리":
+                  aw = re.search(r"리더 레벨이\s*(\d+)\s*이상", content)
+                  vow = re.search(r"alt=['\"]서약['\"][^>]*>(.*?)(<br|</p>|$)", content, re.S)
+                  seg = vow.group(1) if vow else ""
+                  col = re.search(r"alt=['\"](화염|대지|폭풍|파도|번개)['\"]", seg)
+                  vt = "M" if "넣어야" in seg else "O"
+                  vc = ATTR[col.group(1)] if col else at
+                  line = f"{cid}|{name}|리|{at}||||0|{ip}|{aw.group(1) if aw else ''}|{vt}|{vc}"
+              else:
+                  line = f"{cid}|{name}|{ty}|{at}|{num(cell(page, '코스트'))}|{num(cell(page, '파워'))}|{num(cell(page, '히트'))}|{tr}|{ip}"
+              return cid, line, img_url
+
+          # 카드 목록 한 페이지 → 게시글 번호들
+          def list_page(n):
+              page = get(f"{BASE}/bbs/board.php?bo_table=cardlists&page={n}")
+              return [int(x) for x in re.findall(r"data-info=['\"][^'\"]*?♬(\d+)['\"]", page)]
+
+          def save_image(url, cid):
+              data = get(url, binary=True)
+              im = Image.open(io.BytesIO(data)).convert("RGB")
+              im.thumbnail((IMG_MAX, IMG_MAX), Image.LANCZOS)
+              im.save(os.path.join(IMG_DIR, cid + ".jpg"), "JPEG", quality=72, optimize=True, progressive=True)
+
+          def main():
+              src = open(INDEX, encoding="utf-8").read()
+              m = re.search(r"const CARD_DATA = `(.*?)`;", src, re.S)
+              if not m: sys.exit("index.html 에서 CARD_DATA 를 찾지 못함")
+              data = {l.split("|")[0]: l for l in m.group(1).strip().split("\n") if l.strip()}
+              os.makedirs(IMG_DIR, exist_ok=True)
+              wr_map = json.load(open(MAP_FILE, encoding="utf-8")) if os.path.exists(MAP_FILE) else {}
+
+              # 1) 목록에서 게시글 번호 모으기 (최신 글부터, 전부 아는 글인 페이지가 나오면 멈춤)
+              all_wr, n = [], 1
+              while True:
+                  ids = list_page(n)
+                  if not ids or (all_wr and ids == all_wr[-len(ids):]): break
+                  all_wr += ids
+                  n += 1
+                  if n > 400: break
+              new_wr = sorted(i for i in set(all_wr) if str(i) not in wr_map)
+              log(f"목록 {n - 1}페이지 확인 · 새 게시글 {len(new_wr)}개")
+              if MAX_NEW: new_wr = new_wr[:MAX_NEW]
+
+              # 2) 새 게시글 상세 읽기
+              added, mismatch, fail = [], [], 0
+              for wr in new_wr:
+                  try:
+                      r = parse_detail(get(f"{BASE}/bbs/board.php?bo_table=cardlists&wr_id={wr}"))
+                  except Exception as e:
+                      r = None
+                  if not r:
+                      fail += 1; log(f"  읽기 실패: 게시글 {wr}"); continue
+                  cid, line, img_url = r
+                  wr_map[str(wr)] = [cid, img_url]
+                  if cid not in data:
+                      data[cid] = line; added.append(line)
+                  elif data[cid] != line and line not in mismatch:
+                      mismatch.append(f"{data[cid]}  ⇢  {line}")
+
+              # 3) 이미지 없는 카드 이미지 받기 (같은 카드는 번호가 가장 작은 게시글 이미지)
+              first = {}
+              for wr in sorted(wr_map, key=int):
+                  cid, url = wr_map[wr]
+                  if url and cid not in first: first[cid] = url
+              got = 0
+              for cid, url in sorted(first.items()):
+                  if os.path.exists(os.path.join(IMG_DIR, cid + ".jpg")): continue
+                  try: save_image(url, cid); got += 1
+                  except Exception as e: log(f"  이미지 실패: {cid}")
+
+              # 4) 저장
+              open(MAP_FILE, "w", encoding="utf-8").write("{\n" + ",\n".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in sorted(wr_map.items(), key=lambda kv: int(kv[0]))) + "\n}\n")
+              if added:
+                  body = "\n".join(data[k] for k in sorted(data)).replace("`", "'").replace("${", "$ {")
+                  src = src[:m.start(1)] + body + src[m.end(1):]
+                  ver = time.strftime("%Y%m%d-%H%M", time.gmtime(time.time() + 9 * 3600))
+                  src = re.sub(r'const APP_VERSION = "\d{8}-\d{4}"', f'const APP_VERSION = "{ver}"', src, count=1)
+                  open(INDEX, "w", encoding="utf-8").write(src)
+
+              log(f"새 카드 {len(added)}장 추가 · 이미지 {got}장 저장 · 읽기 실패 {fail}개 · 전체 이미지 {len([f for f in os.listdir(IMG_DIR) if f.endswith('.jpg')])}장")
+              for a in added: log("  추가: " + a)
+              if mismatch:
+                  log(f"앱 데이터와 공식 사이트가 다른 카드 {len(mismatch)}장 (자동으로 고치지 않음, 확인용):")
+                  for x in mismatch[:200]: log("  " + x)
+              if os.environ.get("GITHUB_STEP_SUMMARY"):
+                  open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write("### 카드 자동 업데이트 결과\n```\n" + "\n".join(log_lines) + "\n```\n")
+
+          if __name__ == "__main__":
+              main()
+
+          PY
+          python3 /tmp/update_cards.py
+
+      - name: 바뀐 내용 올리기
+        run: |
+          git config user.name "card-sync-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html cards
+          if git diff --cached --quiet; then
+            echo "바뀐 내용 없음"
+          else
+            git commit -m "카드 자동 업데이트"
+            git push
+          fi
